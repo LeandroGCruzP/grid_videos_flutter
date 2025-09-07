@@ -96,51 +96,71 @@ class _MultiVideoLayoutState extends State<MultiVideoLayout> {
       return const Center(child: Text('No videos available'));
     }
 
-    return Stack(
+    return Row(
       children: [
-        Row(
-          children: [
-            Expanded(
-              flex: 4,
-              child: Container(
-                margin: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey, width: 2),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(5),
-                  child: Stack(
-                    children: [
-                      NetworkSafeVideo(
-                        key: ValueKey('main_video_${widget.videoUrls[_mainVideoIndex]}_$_mainVideoIndex'),
-                        videoUrl: widget.videoUrls[_mainVideoIndex],
-                        onTap: _toggleDock,
-                      ),
-                      Positioned(
-                        top: 8,
-                        left: 8,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: Colors.red.withOpacity(0.8),
-                            borderRadius: BorderRadius.circular(4),
+        Expanded(
+          flex: 4,
+          child: Container(
+            margin: const EdgeInsets.all(4),
+            child: Column(
+              children: [
+                Expanded(
+                  flex: _showDock ? 3 : 4,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey, width: 2),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(5),
+                      child: Stack(
+                        children: [
+                          NetworkSafeVideo(
+                            key: ValueKey('main_video_${widget.videoUrls[_mainVideoIndex]}_$_mainVideoIndex'),
+                            videoUrl: widget.videoUrls[_mainVideoIndex],
+                            onTap: _toggleDock,
                           ),
-                          child: Text(
-                            'LIVE ${_mainVideoIndex + 1}',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 12,
+                          Positioned(
+                            top: 8,
+                            left: 8,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: Colors.red.withOpacity(0.8),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                'LIVE ${_mainVideoIndex + 1}',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
+                              ),
                             ),
                           ),
-                        ),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
                 ),
-              ),
+                if (_showDock)
+                  Expanded(
+                    flex: 1,
+                    child: Container(
+                      margin: const EdgeInsets.only(top: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.8),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.grey, width: 1),
+                      ),
+                      child: const Dock(),
+                    ),
+                  ),
+              ],
             ),
+          ),
+        ),
             if (widget.videoUrls.length > 1)
               Expanded(
                 flex: 1,
@@ -223,22 +243,6 @@ class _MultiVideoLayoutState extends State<MultiVideoLayout> {
                   ),
                 ),
               ),
-          ],
-        ),
-        if (_showDock)
-          Positioned(
-            bottom: 50,
-            left: 50,
-            right: 50,
-            child: Container(
-              height: 80,
-              decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.7),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Dock(),
-            ),
-          ),
       ],
     );
   }
