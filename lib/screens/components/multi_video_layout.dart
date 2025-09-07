@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:multi_video/screens/components/dock.dart';
 import 'package:multi_video/screens/components/network_safe_video.dart';
 
 class MultiVideoLayout extends StatefulWidget {
@@ -146,19 +145,6 @@ class _MultiVideoLayoutState extends State<MultiVideoLayout> {
                     ),
                   ),
                 ),
-                if (_showDock)
-                  Expanded(
-                    flex: 1,
-                    child: Container(
-                      margin: const EdgeInsets.only(top: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.8),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.grey, width: 1),
-                      ),
-                      child: const Dock(),
-                    ),
-                  ),
               ],
             ),
           ),
