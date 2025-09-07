@@ -1,0 +1,57 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:multi_video/screens/components/video_grid.dart';
+
+
+class LiveStreamPage extends StatefulWidget {
+  final List<String> urls;
+
+  const LiveStreamPage({super.key, required this.urls});
+
+  @override
+  State<LiveStreamPage> createState() => _LiveStreamPageState();
+}
+
+class _LiveStreamPageState extends State<LiveStreamPage> {
+  @override
+  void initState() {
+    super.initState();
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
+    ]);
+  }
+
+  @override
+  void dispose() {
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
+    ]);
+    super.dispose();
+  }
+
+  // void _goBack(BuildContext context) {
+  //   Navigator.pop(context);
+  // }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Padding(
+        padding: const EdgeInsets.all(5.0),
+        child: Stack(
+          children: [
+            VideoGrid(videoUrls: widget.urls),
+            // ElevatedButton(
+            //   onPressed: () => _goBack(context),
+            //   child: const Text('Go back!'),
+            // ),
+          ],
+        ),
+      ),
+    );
+  }
+}
