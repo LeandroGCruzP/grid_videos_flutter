@@ -105,11 +105,11 @@ class _MultiVideoLayoutState extends State<MultiVideoLayout> {
               child: Container(
                 margin: const EdgeInsets.all(4),
                 decoration: BoxDecoration(
-                  border: Border.all(color: Colors.red, width: 3),
-                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.grey, width: 2),
+                  borderRadius: BorderRadius.circular(6),
                 ),
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular(6),
+                  borderRadius: BorderRadius.circular(5),
                   child: Stack(
                     children: [
                       NetworkSafeVideo(
@@ -177,33 +177,10 @@ class _MultiVideoLayoutState extends State<MultiVideoLayout> {
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                                 child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(4),
-                                  child: Stack(
-                                    children: [
-                                      NetworkSafeVideo(
-                                        key: ValueKey('thumbnail_video_${widget.videoUrls[originalIndex]}_$originalIndex'),
-                                        videoUrl: widget.videoUrls[originalIndex],
-                                      ),
-                                      Positioned(
-                                        top: 4,
-                                        left: 4,
-                                        child: Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                          decoration: BoxDecoration(
-                                            color: Colors.blue.withOpacity(0.8),
-                                            borderRadius: BorderRadius.circular(3),
-                                          ),
-                                          child: Text(
-                                            '${originalIndex + 1}',
-                                            style: const TextStyle(
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 10,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ],
+                                  borderRadius: BorderRadius.circular(5),
+                                  child: NetworkSafeVideo(
+                                    key: ValueKey('thumbnail_video_${widget.videoUrls[originalIndex]}_$originalIndex'),
+                                    videoUrl: widget.videoUrls[originalIndex],
                                   ),
                                 ),
                               ),

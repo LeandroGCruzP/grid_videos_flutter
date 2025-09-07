@@ -108,7 +108,7 @@ class _VideoWidgetState extends State<VideoWidget> {
             ),
             SizedBox(height: 8),
             Text(
-              'Live unavailable',
+              'Live indisponível',
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 14,
@@ -117,7 +117,7 @@ class _VideoWidgetState extends State<VideoWidget> {
             ),
             SizedBox(height: 4),
             Text(
-              'Connection error',
+              'Erro de conexão',
               style: TextStyle(
                 color: Colors.grey,
                 fontSize: 10,
@@ -142,7 +142,7 @@ class _VideoWidgetState extends State<VideoWidget> {
             ),
             SizedBox(height: 8),
             Text(
-              'Loading...',
+              'Carregando...',
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 12,
