@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:multi_video/screens/components/video_grid.dart';
+import 'package:multi_video/screens/components/multi_video_layout.dart';
 
 
 class LiveStreamPage extends StatefulWidget {
@@ -33,24 +33,12 @@ class _LiveStreamPageState extends State<LiveStreamPage> {
     super.dispose();
   }
 
-  // void _goBack(BuildContext context) {
-  //   Navigator.pop(context);
-  // }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Padding(
         padding: const EdgeInsets.all(5.0),
-        child: Stack(
-          children: [
-            VideoGrid(videoUrls: widget.urls),
-            // ElevatedButton(
-            //   onPressed: () => _goBack(context),
-            //   child: const Text('Go back!'),
-            // ),
-          ],
-        ),
+        child: MultiVideoLayout(videoUrls: widget.urls),
       ),
     );
   }
