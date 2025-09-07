@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:multi_video/screens/live_stream_page.dart';
+import 'package:multi_video/screens/sync_video_page.dart';
 
 void main() {
   // Global error handler to prevent crashes
@@ -17,13 +18,23 @@ void main() {
 class FirstRoute extends StatelessWidget {
   const FirstRoute({super.key});
 
-  final url = "https://live-hls-web-aje.getaj.net/AJE/01.m3u8";
-  // final url2 = "https://ireplay.tv/test/blender.m3u8";
+  final liveUrl = "https://live-hls-web-aje.getaj.net/AJE/01.m3u8";
+  
+  final videoUrl1 = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
+  final videoUrl2 = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4";
+  final videoUrl3 = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4";
 
   void _openLives(BuildContext context, List<String> urls) {
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => LiveStreamPage(urls: urls)),
+    );
+  }
+
+  void _openSyncVideos(BuildContext context, List<String> urls) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => SyncVideoPage(urls: urls)),
     );
   }
 
@@ -37,28 +48,14 @@ class FirstRoute extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               ElevatedButton(
-                child: const Text('Live 1'), 
-                onPressed: () => _openLives(context, [url])
-              ),
-              ElevatedButton(
-                child: const Text('Lives 2'), 
-                onPressed: () => _openLives(context, [url, url])
-              ),
-              ElevatedButton(
-                child: const Text('Lives 3'), 
-                onPressed: () => _openLives(context, [url, url, url])
-              ),
-              ElevatedButton(
-                child: const Text('Lives 4'), 
-                onPressed: () => _openLives(context, [url, url, url, url])
-              ),
-              ElevatedButton(
-                child: const Text('Lives 5'), 
-                onPressed: () => _openLives(context, [url, url, url, url, url])
-              ),
-              ElevatedButton(
                 child: const Text('Lives 6'), 
-                onPressed: () => _openLives(context, [url, url, url, url, url, url])
+                onPressed: () => _openLives(context, [liveUrl, liveUrl, liveUrl, liveUrl, liveUrl, liveUrl])
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+                child: const Text('Sync Videos 6'), 
+                onPressed: () => _openSyncVideos(context, [videoUrl1, videoUrl2, videoUrl3, videoUrl1, videoUrl2, videoUrl3])
               ),
             ],
           ),
