@@ -96,7 +96,9 @@ class _MultiVideoLayoutState extends State<MultiVideoLayout> {
       return const Center(child: Text('No videos available'));
     }
 
-    return Row(
+    return Stack(
+      children: [
+        Row(
       children: [
         Expanded(
           flex: 4,
@@ -243,6 +245,30 @@ class _MultiVideoLayoutState extends State<MultiVideoLayout> {
                   ),
                 ),
               ),
+        ],
+      ),
+        if (_showDock)
+          Positioned(
+            top: 16,
+            left: 16,
+            child: Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: Colors.black.withOpacity(0.7),
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white.withOpacity(0.3), width: 1),
+              ),
+              child: IconButton(
+                onPressed: () => Navigator.of(context).pop(),
+                icon: const Icon(
+                  Icons.arrow_back,
+                  color: Colors.white,
+                  size: 24,
+                ),
+              ),
+            ),
+          ),
       ],
     );
   }
