@@ -18,8 +18,7 @@ class FirstRoute extends StatelessWidget {
   const FirstRoute({super.key});
 
   final url = "https://live-hls-web-aje.getaj.net/AJE/01.m3u8";
-  final url2 = "https://ireplay.tv/test/blender.m3u8";
-  final url3 = "https://www.youtube.com/watch?v=ydYDqZQpim8";
+  // final url2 = "https://ireplay.tv/test/blender.m3u8";
 
   void _openLives(BuildContext context, List<String> urls) {
     Navigator.push(
@@ -43,23 +42,23 @@ class FirstRoute extends StatelessWidget {
               ),
               ElevatedButton(
                 child: const Text('Lives 2'), 
-                onPressed: () => _openLives(context, [url, url2])
+                onPressed: () => _openLives(context, [url, url])
               ),
               ElevatedButton(
                 child: const Text('Lives 3'), 
-                onPressed: () => _openLives(context, [url, url2, url3])
+                onPressed: () => _openLives(context, [url, url, url])
               ),
               ElevatedButton(
                 child: const Text('Lives 4'), 
-                onPressed: () => _openLives(context, [url, url2, url3, url])
+                onPressed: () => _openLives(context, [url, url, url, url])
               ),
               ElevatedButton(
                 child: const Text('Lives 5'), 
-                onPressed: () => _openLives(context, [url, url2, url3, url, url2])
+                onPressed: () => _openLives(context, [url, url, url, url, url])
               ),
               ElevatedButton(
                 child: const Text('Lives 6'), 
-                onPressed: () => _openLives(context, [url, url2, url3, url, url2, url3])
+                onPressed: () => _openLives(context, [url, url, url, url, url, url])
               ),
             ],
           ),
