@@ -41,7 +41,6 @@ class FirstRoute extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('First Route')),
       body: Center(
         child: SingleChildScrollView(
           child: Column(
