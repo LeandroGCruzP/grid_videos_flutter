@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:multi_video/screens/components/multi_video_layout.dart';
-
+import 'package:multi_video/screens/components/liveStream/live_stream_layout.dart';
 
 class LiveStreamPage extends StatefulWidget {
   final List<String> urls;
@@ -38,7 +37,7 @@ class _LiveStreamPageState extends State<LiveStreamPage> {
     return Scaffold(
       body: Padding(
         padding: const EdgeInsets.all(5.0),
-        child: MultiVideoLayout(videoUrls: widget.urls),
+        child: LiveStreamLayout(videoUrls: widget.urls),
       ),
     );
   }

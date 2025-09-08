@@ -1,34 +1,25 @@
-import 'package:better_player/better_player.dart';
-import 'package:flutter/material.dart';
 import 'dart:async';
 
-import '../controllers/sync_video_controller.dart';
+import 'package:better_player/better_player.dart';
+import 'package:flutter/material.dart';
 
-class SyncVideoWidget extends StatefulWidget {
+import '../../controllers/live_stream_better_player_controller.dart';
+
+class LiveVideo extends StatefulWidget {
   final String videoUrl;
   final VoidCallback? onTap;
   final VoidCallback? onError;
-  final BetterPlayerController? globalController;
-  final bool isMainVideo;
 
-  const SyncVideoWidget({
-    super.key, 
-    required this.videoUrl, 
-    this.onTap, 
-    this.onError,
-    this.globalController,
-    this.isMainVideo = false,
-  });
+  const LiveVideo({super.key, required this.videoUrl, this.onTap, this.onError});
 
   @override
-  State<SyncVideoWidget> createState() => _SyncVideoWidgetState();
+  State<LiveVideo> createState() => _LiveVideoState();
 }
 
-class _SyncVideoWidgetState extends State<SyncVideoWidget> {
-  SyncBetterPlayerController? _customController;
+class _LiveVideoState extends State<LiveVideo> {
+  LiveStreamBetterPlayerController? _customController;
   bool _hasError = false;
   bool _isLoading = true;
-  StreamSubscription? _globalStateSubscription;
 
   @override
   void initState() {
@@ -37,21 +28,57 @@ class _SyncVideoWidgetState extends State<SyncVideoWidget> {
   }
 
   Future<void> _initializePlayer() async {
-    try {
-      debugPrint('Initializing video: ${widget.videoUrl}');
-      _customController = SyncBetterPlayerController(widget.videoUrl);
-      
-      // Wait a bit to see if initialization succeeds
-      await Future.delayed(const Duration(milliseconds: 1000));
-      
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-        debugPrint('Video initialized successfully: ${widget.videoUrl}');
+    await runZonedGuarded(() async {
+      try {
+        _customController = LiveStreamBetterPlayerController(widget.videoUrl);
+        
+        // Wait for initial setup
+        await Future.delayed(const Duration(milliseconds: 500));
+        
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+          
+          // Monitor controller for early error detection
+          Timer.periodic(const Duration(milliseconds: 300), (timer) {
+            if (!mounted || _customController == null) {
+              timer.cancel();
+              return;
+            }
+            
+            // Check if controller detected an error
+            if (_customController!.hasError) {
+              debugPrint('Early error detected by controller');
+              timer.cancel();
+              if (mounted) {
+                setState(() {
+                  _hasError = true;
+                  _isLoading = false;
+                });
+                widget.onError?.call();
+              }
+              return;
+            }
+            
+            // Stop monitoring after reasonable time
+            if (timer.tick > 20) { // 6 seconds
+              timer.cancel();
+            }
+          });
+        }
+      } catch (e) {
+        debugPrint('Player initialization failed: $e');
+        if (mounted) {
+          setState(() {
+            _hasError = true;
+            _isLoading = false;
+          });
+          widget.onError?.call();
+        }
       }
-    } catch (e) {
-      debugPrint('Error initializing video: $e');
+    }, (error, stack) {
+      debugPrint('Caught uncaught error in VideoWidget: $error');
       if (mounted) {
         setState(() {
           _hasError = true;
@@ -59,13 +86,11 @@ class _SyncVideoWidgetState extends State<SyncVideoWidget> {
         });
         widget.onError?.call();
       }
-    }
+    });
   }
-
 
   @override
   void dispose() {
-    _globalStateSubscription?.cancel();
     _customController?.dispose();
     super.dispose();
   }
@@ -84,7 +109,7 @@ class _SyncVideoWidgetState extends State<SyncVideoWidget> {
             ),
             SizedBox(height: 8),
             Text(
-              'Video unavailable',
+              'Live indisponível',
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 14,
@@ -93,7 +118,7 @@ class _SyncVideoWidgetState extends State<SyncVideoWidget> {
             ),
             SizedBox(height: 4),
             Text(
-              'Failed to load',
+              'Erro de conexão',
               style: TextStyle(
                 color: Colors.grey,
                 fontSize: 10,
@@ -118,7 +143,7 @@ class _SyncVideoWidgetState extends State<SyncVideoWidget> {
             ),
             SizedBox(height: 8),
             Text(
-              'Loading video...',
+              'Carregando...',
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 12,
@@ -152,7 +177,4 @@ class _SyncVideoWidgetState extends State<SyncVideoWidget> {
     }
     return content;
   }
-
-  // Expose controller for global sync
-  BetterPlayerController? get controller => _customController?.controller;
 }

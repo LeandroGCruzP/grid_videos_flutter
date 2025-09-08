@@ -1,6 +1,9 @@
-import 'package:flutter/material.dart';
+import 'dart:async';
+
 import 'package:better_player/better_player.dart';
-import 'simple_sync_video.dart';
+import 'package:flutter/material.dart';
+import 'package:multi_video/screens/controllers/sync_video_better_player_controller.dart';
+
 import 'sync_dock.dart';
 
 class SyncVideoLayout extends StatefulWidget {
@@ -9,29 +12,100 @@ class SyncVideoLayout extends StatefulWidget {
   const SyncVideoLayout({super.key, required this.videoUrls});
 
   @override
-  State<SyncVideoLayout> createState() => _SyncVideoLayoutState();
+  State<SyncVideoLayout> createState() =>
+      _SyncVideoLayoutState();
 }
 
 class _SyncVideoLayoutState extends State<SyncVideoLayout> {
+  final List<SyncVideoBetterPlayerController?> _controllers = [];
   int _mainVideoIndex = 0;
   bool _showDock = false;
-  
-  final List<BetterPlayerController?> _controllers = [];
+  bool _allControllersReady = false;
 
   @override
   void initState() {
     super.initState();
-    // Initialize controllers list
+    // Useful to avoid index errors and make it easier to manage controllers as videos are loaded
     for (int i = 0; i < widget.videoUrls.length; i++) {
       _controllers.add(null);
+    }
+    _initializeControllers();
+  }
+
+  Future<void> _initializeControllers() async {
+    for (int i = 0; i < widget.videoUrls.length; i++) {
+      if (_controllers[i] == null) {
+        _createOptimizedController(i);
+      }
+    }
+    _checkIfAllControllersReady();
+  }
+
+  void _createOptimizedController(int index) {
+    try {
+      final controller = SyncVideoBetterPlayerController(
+        widget.videoUrls[index],
+        mode: VideoPlayerMode.syncVideo,
+      );
+
+      if (mounted) {
+        setState(() {
+          _controllers[index] = controller;
+        });
+
+        // Check if all controllers are ready periodically
+        Timer.periodic(const Duration(milliseconds: 200), (timer) {
+          if (!mounted) {
+            timer.cancel();
+            return;
+          }
+
+          _checkIfAllControllersReady();
+
+          if (_allControllersReady || timer.tick > 50) {
+            // Stop after 10 seconds
+            timer.cancel();
+          }
+        });
+      }
+    } catch (e) {
+      debugPrint(
+          '❌ 🎥 Error creating optimized controller for video $index: $e');
+    }
+  }
+
+  void _checkIfAllControllersReady() {
+    final allReady = _controllers
+        .every((controller) => controller != null && controller.isReady);
+
+    if (allReady && !_allControllersReady) {
+      setState(() {
+        _allControllersReady = true;
+      });
+      _synchronizeAllVideosStart();
+    }
+  }
+
+  Future<void> _synchronizeAllVideosStart() async {
+    // Controllers are already configured to start at position 0
+    for (final controller in _controllers) {
+      if (controller != null && controller.isReady) {
+        try {
+          await controller.controller.seekTo(Duration.zero);
+        } catch (e) {
+          debugPrint('❌ 🎥 Error seeking to start: $e');
+        }
+      }
     }
   }
 
   void _setMainVideo(int index) {
-    setState(() {
-      _mainVideoIndex = index;
-      _showDock = false;
-    });
+    if (index != _mainVideoIndex) {
+      setState(() {
+        _mainVideoIndex = index;
+        _showDock = false;
+      });
+    }
   }
 
   void _toggleDock() {
@@ -41,15 +115,41 @@ class _SyncVideoLayoutState extends State<SyncVideoLayout> {
   }
 
   List<int> get _visibleThumbnailIndices {
-    List<int> indices = List.generate(widget.videoUrls.length, (index) => index);
+    List<int> indices =
+        List.generate(widget.videoUrls.length, (index) => index);
     indices.removeAt(_mainVideoIndex);
-    return indices.take(2).toList(); // Max 2 thumbnails
+    return indices.take(2).toList(); // Show only first 2 thumbnails
   }
 
   List<BetterPlayerController> get _allControllers {
-    return _controllers.where((c) => c != null).cast<BetterPlayerController>().toList();
+    return _controllers
+        .where((controller) => controller != null && controller.isReady)
+        .map((controller) => controller!.controller)
+        .toList();
   }
 
+  @override
+  void dispose() {
+    for (final controller in _controllers) {
+      controller?.dispose();
+    }
+    super.dispose();
+  }
+
+  Widget _buildOptimizedVideo(int index, {bool isMain = false}) {
+    final controller = _controllers[index];
+
+    if (controller == null || !controller.isReady) {
+      return Container(
+        color: Colors.black,
+        child: const Center(
+          child: CircularProgressIndicator(color: Colors.white),
+        ),
+      );
+    }
+
+    return BetterPlayer(controller: controller.controller);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -78,16 +178,17 @@ class _SyncVideoLayoutState extends State<SyncVideoLayout> {
                           borderRadius: BorderRadius.circular(5),
                           child: Stack(
                             children: [
-                              SimpleSyncVideo(
-                                key: ValueKey('main_video_${widget.videoUrls[_mainVideoIndex]}_$_mainVideoIndex'),
-                                videoUrl: widget.videoUrls[_mainVideoIndex],
+                              GestureDetector(
                                 onTap: _toggleDock,
+                                child: _buildOptimizedVideo(_mainVideoIndex,
+                                    isMain: true),
                               ),
                               Positioned(
                                 top: 8,
                                 left: 8,
                                 child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 8, vertical: 4),
                                   decoration: BoxDecoration(
                                     color: Colors.red.withOpacity(0.8),
                                     borderRadius: BorderRadius.circular(4),
@@ -118,7 +219,12 @@ class _SyncVideoLayoutState extends State<SyncVideoLayout> {
                             border: Border.all(color: Colors.grey, width: 1),
                           ),
                           child: SyncDock(
-                            mainController: _controllers[_mainVideoIndex],
+                            key:
+                                ValueKey('sync_dock_${_allControllers.length}'),
+                            mainController:
+                                _controllers[_mainVideoIndex]?.isReady == true
+                                    ? _controllers[_mainVideoIndex]!.controller
+                                    : null,
                             allControllers: _allControllers,
                           ),
                         ),
@@ -127,8 +233,8 @@ class _SyncVideoLayoutState extends State<SyncVideoLayout> {
                 ),
               ),
             ),
-            
-            // Thumbnails
+
+            // Optimized thumbnails
             if (widget.videoUrls.length > 1)
               Expanded(
                 flex: 1,
@@ -143,14 +249,37 @@ class _SyncVideoLayoutState extends State<SyncVideoLayout> {
                             onTap: () => _setMainVideo(originalIndex),
                             child: Container(
                               decoration: BoxDecoration(
-                                border: Border.all(color: Colors.grey, width: 2),
+                                border:
+                                    Border.all(color: Colors.grey, width: 2),
                                 borderRadius: BorderRadius.circular(6),
                               ),
                               child: ClipRRect(
                                 borderRadius: BorderRadius.circular(5),
-                                child: SimpleSyncVideo(
-                                  key: ValueKey('thumbnail_video_${widget.videoUrls[originalIndex]}_$originalIndex'),
-                                  videoUrl: widget.videoUrls[originalIndex],
+                                child: Stack(
+                                  children: [
+                                    _buildOptimizedVideo(originalIndex),
+                                    Positioned(
+                                      top: 4,
+                                      left: 4,
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 4, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          color: Colors.black.withOpacity(0.7),
+                                          borderRadius:
+                                              BorderRadius.circular(3),
+                                        ),
+                                        child: Text(
+                                          '${originalIndex + 1}',
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 10,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ),
@@ -163,8 +292,6 @@ class _SyncVideoLayoutState extends State<SyncVideoLayout> {
               ),
           ],
         ),
-        
-        // Back button when dock is visible
         if (_showDock)
           Positioned(
             top: 16,

@@ -1,69 +1,98 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:multi_video/screens/components/liveStream/live_video.dart';
 
-import 'video.dart';
-
-class SafeVideoWidget extends StatefulWidget {
+class LiveNetworkSafeVideo extends StatefulWidget {
   final String videoUrl;
   final VoidCallback? onTap;
 
-  const SafeVideoWidget({super.key, required this.videoUrl, this.onTap});
+  const LiveNetworkSafeVideo({super.key, required this.videoUrl, this.onTap});
 
   @override
-  State<SafeVideoWidget> createState() => _SafeVideoWidgetState();
+  State<LiveNetworkSafeVideo> createState() => _LiveNetworkSafeVideoState();
 }
 
-class _SafeVideoWidgetState extends State<SafeVideoWidget> {
+class _LiveNetworkSafeVideoState extends State<LiveNetworkSafeVideo> {
   bool _isLoading = true;
   bool _hasError = false;
+  bool _urlTested = false;
   String _errorMessage = 'Connection failed';
 
   @override
   void initState() {
     super.initState();
-    _initializeWithDelay();
+    _testNetworkConnection();
   }
 
-  Future<void> _initializeWithDelay() async {
-    // Quick validation and setup
-    await Future.delayed(const Duration(milliseconds: 800));
-    
-    if (mounted) {
-      // Simple URL validation
+  Future<void> _testNetworkConnection() async {
+    try {
+      // Quick basic validation
       if (widget.videoUrl.isEmpty || 
           (!widget.videoUrl.startsWith('http') && !widget.videoUrl.startsWith('https'))) {
-        setState(() {
-          _isLoading = false;
-          _hasError = true;
-          _errorMessage = 'Invalid URL';
-        });
+        _showError('Invalid URL');
+        return;
+      }
+
+      // Try to connect to the URL host first
+      final uri = Uri.parse(widget.videoUrl);
+      final host = uri.host;
+      
+      if (host.isEmpty) {
+        _showError('Invalid host');
+        return;
+      }
+
+      // Test basic connectivity with socket
+      Socket? socket;
+      try {
+        socket = await Socket.connect(host, uri.port != 0 ? uri.port : (uri.scheme == 'https' ? 443 : 80))
+            .timeout(const Duration(seconds: 5));
+        
+        // If we got here, basic connection works
+        socket.destroy();
+        
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+            _urlTested = true;
+          });
+        }
+        
+      } catch (e) {
+        _showError('Cannot reach server');
         return;
       }
       
+    } catch (e) {
+      _showError('Network error');
+    }
+  }
+
+  void _showError(String message) {
+    if (mounted) {
       setState(() {
         _isLoading = false;
-        _hasError = false;
+        _hasError = true;
+        _errorMessage = message;
       });
     }
   }
 
   void _onVideoError() {
-    if (mounted && !_hasError) {
-      setState(() {
-        _hasError = true;
-        _errorMessage = 'Stream unavailable';
-      });
-    }
+    _showError('Stream unavailable');
   }
 
-  void _performManualRetry() {
-// Reset auto retry counter
+  Future<void> _retry() async {
     setState(() {
       _isLoading = true;
       _hasError = false;
+      _urlTested = false;
     });
-    _initializeWithDelay();
+    
+    await Future.delayed(const Duration(milliseconds: 500));
+    _testNetworkConnection();
   }
 
   Widget _buildErrorWidget() {
@@ -100,7 +129,7 @@ class _SafeVideoWidgetState extends State<SafeVideoWidget> {
               width: 80,
               height: 24,
               child: ElevatedButton(
-                onPressed: _performManualRetry,
+                onPressed: _retry,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.grey[700],
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
@@ -134,7 +163,7 @@ class _SafeVideoWidgetState extends State<SafeVideoWidget> {
             ),
             SizedBox(height: 8),
             Text(
-              'Connecting...',
+              'Testing connection...',
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 11,
@@ -148,20 +177,19 @@ class _SafeVideoWidgetState extends State<SafeVideoWidget> {
 
   @override
   Widget build(BuildContext context) {
-    Widget content;
-    
     if (_hasError) {
-      content = _buildErrorWidget();
+      return _buildErrorWidget();
     } else if (_isLoading) {
-      content = _buildLoadingWidget();
-    } else {
-      content = VideoWidget(
+      return _buildLoadingWidget();
+    } else if (_urlTested) {
+      // URL is safe, proceed with video player
+      return LiveVideo(
         videoUrl: widget.videoUrl,
         onTap: widget.onTap,
         onError: _onVideoError,
       );
+    } else {
+      return _buildLoadingWidget();
     }
-
-    return content;
   }
 }

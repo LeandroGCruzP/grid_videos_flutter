@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:multi_video/screens/components/network_safe_video.dart';
+import 'package:multi_video/screens/components/liveStream/live_network_safe_video.dart';
 
-class MultiVideoLayout extends StatefulWidget {
+class LiveStreamLayout extends StatefulWidget {
   final List<String> videoUrls;
 
-  const MultiVideoLayout({super.key, required this.videoUrls});
+  const LiveStreamLayout({super.key, required this.videoUrls});
 
   @override
-  State<MultiVideoLayout> createState() => _MultiVideoLayoutState();
+  State<LiveStreamLayout> createState() => _LiveStreamLayoutState();
 }
 
-class _MultiVideoLayoutState extends State<MultiVideoLayout> {
+class _LiveStreamLayoutState extends State<LiveStreamLayout> {
   int _mainVideoIndex = 0;
   bool _showDock = false;
   int _thumbnailStartIndex = 0;
@@ -116,7 +116,7 @@ class _MultiVideoLayoutState extends State<MultiVideoLayout> {
                       borderRadius: BorderRadius.circular(5),
                       child: Stack(
                         children: [
-                          NetworkSafeVideo(
+                          LiveNetworkSafeVideo(
                             key: ValueKey('main_video_${widget.videoUrls[_mainVideoIndex]}_$_mainVideoIndex'),
                             videoUrl: widget.videoUrls[_mainVideoIndex],
                             onTap: _toggleDock,
@@ -186,7 +186,7 @@ class _MultiVideoLayoutState extends State<MultiVideoLayout> {
                                 ),
                                 child: ClipRRect(
                                   borderRadius: BorderRadius.circular(5),
-                                  child: NetworkSafeVideo(
+                                  child: LiveNetworkSafeVideo(
                                     key: ValueKey('thumbnail_video_${widget.videoUrls[originalIndex]}_$originalIndex'),
                                     videoUrl: widget.videoUrls[originalIndex],
                                   ),

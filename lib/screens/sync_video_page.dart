@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:multi_video/screens/components/optimized_sync_video_layout.dart';
+import 'package:multi_video/screens/components/syncVideo/sync_video_layout.dart';
 
 class SyncVideoPage extends StatefulWidget {
   final List<String> urls;
@@ -37,7 +37,7 @@ class _SyncVideoPageState extends State<SyncVideoPage> {
     return Scaffold(
       body: Padding(
         padding: const EdgeInsets.all(5.0),
-        child: OptimizedSyncVideoLayout(videoUrls: widget.urls),
+        child: SyncVideoLayout(videoUrls: widget.urls),
       ),
     );
   }

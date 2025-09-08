@@ -1,6 +1,7 @@
+import 'dart:async';
+
 import 'package:better_player/better_player.dart';
 import 'package:flutter/material.dart';
-import 'dart:async';
 
 class SyncDock extends StatefulWidget {
   final BetterPlayerController? mainController;

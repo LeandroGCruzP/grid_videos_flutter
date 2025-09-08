@@ -47,13 +47,13 @@ class FirstRoute extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               ElevatedButton(
-                child: const Text('Lives 6'), 
+                child: const Text('Lives'), 
                 onPressed: () => _openLives(context, [liveUrl, liveUrl, liveUrl, liveUrl, liveUrl, liveUrl])
               ),
               const SizedBox(height: 20),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
-                child: const Text('Sync Videos 6'), 
+                child: const Text('Sync videos'), 
                 onPressed: () => _openSyncVideos(context, [videoUrl1, videoUrl2, videoUrl3, videoUrl1, videoUrl2, videoUrl3])
               ),
             ],
