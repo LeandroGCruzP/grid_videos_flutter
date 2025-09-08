@@ -226,7 +226,7 @@ class _SyncDockState extends State<SyncDock> {
                     ),
                     child: Slider(
                       value: _totalDuration.inMilliseconds > 0
-                          ? _currentPosition.inMilliseconds / _totalDuration.inMilliseconds
+                          ? (_currentPosition.inMilliseconds / _totalDuration.inMilliseconds).clamp(0.0, 1.0)
                           : 0.0,
                       onChanged: (value) {
                         final position = Duration(
