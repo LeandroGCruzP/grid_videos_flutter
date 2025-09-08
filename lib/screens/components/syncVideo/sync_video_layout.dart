@@ -251,32 +251,7 @@ class _SyncVideoLayoutState extends State<SyncVideoLayout> {
                               ),
                               child: ClipRRect(
                                 borderRadius: BorderRadius.circular(5),
-                                child: Stack(
-                                  children: [
-                                    _buildOptimizedVideo(originalIndex),
-                                    Positioned(
-                                      top: 4,
-                                      left: 4,
-                                      child: Container(
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 4, vertical: 2),
-                                        decoration: BoxDecoration(
-                                          color: Colors.black.withOpacity(0.7),
-                                          borderRadius:
-                                              BorderRadius.circular(3),
-                                        ),
-                                        child: Text(
-                                          '${originalIndex + 1}',
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 10,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                                child: _buildOptimizedVideo(originalIndex),
                               ),
                             ),
                           ),
