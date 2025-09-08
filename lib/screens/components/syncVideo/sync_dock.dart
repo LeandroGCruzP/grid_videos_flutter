@@ -63,28 +63,33 @@ class _SyncDockState extends State<SyncDock> {
     
     // Find maximum duration among all controllers
     Duration maxDuration = Duration.zero;
-    Duration currentPos = Duration.zero;
+    Duration maxCurrentPos = Duration.zero;
     bool anyPlaying = false;
     
     for (final controller in widget.allControllers) {
       final videoController = controller.videoPlayerController;
       if (videoController != null) {
         final duration = videoController.value.duration ?? Duration.zero;
+        final position = videoController.value.position;
+        
         if (duration > maxDuration) {
           maxDuration = duration;
         }
         
-        // Use position from first playing video, or first video if none playing
-        if (!anyPlaying || videoController.value.isPlaying) {
-          currentPos = videoController.value.position;
-          anyPlaying = videoController.value.isPlaying || anyPlaying;
+        // Use the furthest position among all videos (the one that's progressed most)
+        if (position > maxCurrentPos) {
+          maxCurrentPos = position;
+        }
+        
+        if (videoController.value.isPlaying) {
+          anyPlaying = true;
         }
       }
     }
     
     setState(() {
       _isPlaying = anyPlaying;
-      _currentPosition = currentPos;
+      _currentPosition = maxCurrentPos;
       _totalDuration = maxDuration;
     });
   }
