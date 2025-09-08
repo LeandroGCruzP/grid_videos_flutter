@@ -61,14 +61,31 @@ class _SyncDockState extends State<SyncDock> {
   void _updateState() {
     if (!mounted || widget.allControllers.isEmpty) return;
     
-    // Use the first available controller for state reference
-    final controller = widget.allControllers.first.videoPlayerController;
-    if (controller == null) return;
+    // Find maximum duration among all controllers
+    Duration maxDuration = Duration.zero;
+    Duration currentPos = Duration.zero;
+    bool anyPlaying = false;
+    
+    for (final controller in widget.allControllers) {
+      final videoController = controller.videoPlayerController;
+      if (videoController != null) {
+        final duration = videoController.value.duration ?? Duration.zero;
+        if (duration > maxDuration) {
+          maxDuration = duration;
+        }
+        
+        // Use position from first playing video, or first video if none playing
+        if (!anyPlaying || videoController.value.isPlaying) {
+          currentPos = videoController.value.position;
+          anyPlaying = videoController.value.isPlaying || anyPlaying;
+        }
+      }
+    }
     
     setState(() {
-      _isPlaying = controller.value.isPlaying;
-      _currentPosition = controller.value.position;
-      _totalDuration = controller.value.duration ?? Duration.zero;
+      _isPlaying = anyPlaying;
+      _currentPosition = currentPos;
+      _totalDuration = maxDuration;
     });
   }
 
