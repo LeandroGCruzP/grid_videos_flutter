@@ -168,7 +168,7 @@ class _SyncVideoLayoutState extends State<SyncVideoLayout> {
                       flex: _showDock ? 3 : 4,
                       child: Container(
                         decoration: BoxDecoration(
-                          border: Border.all(color: Colors.grey, width: 2),
+                          border: Border.all(color: const Color.fromARGB(31, 88, 88, 88), width: 2),
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: ClipRRect(
@@ -213,7 +213,7 @@ class _SyncVideoLayoutState extends State<SyncVideoLayout> {
                           decoration: BoxDecoration(
                             color: Colors.black.withOpacity(0.8),
                             borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: Colors.grey, width: 1),
+                            border: Border.all(color: const Color.fromARGB(31, 88, 88, 88), width: 2),
                           ),
                           child: SyncDock(
                             key:
@@ -246,8 +246,7 @@ class _SyncVideoLayoutState extends State<SyncVideoLayout> {
                             onTap: () => _setMainVideo(originalIndex),
                             child: Container(
                               decoration: BoxDecoration(
-                                border:
-                                    Border.all(color: Colors.grey, width: 2),
+                                border: Border.all(color: const Color.fromARGB(31, 88, 88, 88), width: 2),
                                 borderRadius: BorderRadius.circular(6),
                               ),
                               child: ClipRRect(
@@ -299,7 +298,7 @@ class _SyncVideoLayoutState extends State<SyncVideoLayout> {
               decoration: BoxDecoration(
                 color: Colors.black.withOpacity(0.7),
                 shape: BoxShape.circle,
-                border: Border.all(color: Colors.white.withOpacity(0.3), width: 1),
+                border: Border.all(color: const Color.fromARGB(31, 88, 88, 88), width: 1),
               ),
               child: IconButton(
                 onPressed: () => Navigator.of(context).pop(),

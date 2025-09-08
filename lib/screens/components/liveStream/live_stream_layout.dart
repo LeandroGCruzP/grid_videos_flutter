@@ -109,7 +109,7 @@ class _LiveStreamLayoutState extends State<LiveStreamLayout> {
                   flex: _showDock ? 3 : 4,
                   child: Container(
                     decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey, width: 2),
+                      border: Border.all(color: const Color.fromARGB(31, 88, 88, 88), width: 2),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: ClipRRect(
@@ -181,7 +181,7 @@ class _LiveStreamLayoutState extends State<LiveStreamLayout> {
                               onTap: () => _setMainVideo(originalIndex),
                               child: Container(
                                 decoration: BoxDecoration(
-                                  border: Border.all(color: Colors.grey, width: 2),
+                                  border: Border.all(color: const Color.fromARGB(31, 88, 88, 88), width: 2),
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                                 child: ClipRRect(
@@ -206,7 +206,7 @@ class _LiveStreamLayoutState extends State<LiveStreamLayout> {
                               decoration: BoxDecoration(
                                 color: Colors.black.withOpacity(0.8),
                                 borderRadius: BorderRadius.circular(6),
-                                border: Border.all(color: Colors.orange, width: 2),
+                                border: Border.all(color: const Color.fromARGB(31, 88, 88, 88), width: 2),
                               ),
                               child: Center(
                                 child: Column(
@@ -243,7 +243,7 @@ class _LiveStreamLayoutState extends State<LiveStreamLayout> {
               decoration: BoxDecoration(
                 color: Colors.black.withOpacity(0.7),
                 shape: BoxShape.circle,
-                border: Border.all(color: Colors.white.withOpacity(0.3), width: 1),
+                border: Border.all(color: const Color.fromARGB(31, 88, 88, 88), width: 2),
               ),
               child: IconButton(
                 onPressed: () => Navigator.of(context).pop(),
