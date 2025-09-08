@@ -43,10 +43,7 @@ class _SyncVideoLayoutState extends State<SyncVideoLayout> {
 
   void _createOptimizedController(int index) {
     try {
-      final controller = SyncVideoBetterPlayerController(
-        widget.videoUrls[index],
-        mode: VideoPlayerMode.syncVideo,
-      );
+      final controller = SyncVideoBetterPlayerController(widget.videoUrls[index]);
 
       if (mounted) {
         setState(() {

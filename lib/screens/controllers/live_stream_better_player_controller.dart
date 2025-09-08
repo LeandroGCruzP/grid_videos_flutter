@@ -3,17 +3,11 @@ import 'dart:async';
 import 'package:better_player/better_player.dart';
 import 'package:flutter/material.dart';
 
-enum VideoPlayerMode {
-  liveStream,
-  syncVideo,
-}
-
 class LiveStreamBetterPlayerController {
   BetterPlayerController? _controller;
   bool _isDisposed = false;
   bool _hasInitializationError = false;
   Timer? _errorCheckTimer;
-  final VideoPlayerMode _mode;
 
   BetterPlayerController get controller {
     if (_controller == null || _isDisposed || _hasInitializationError) {
@@ -25,8 +19,7 @@ class LiveStreamBetterPlayerController {
   bool get hasError => _hasInitializationError;
   bool get isReady => _controller != null && !_isDisposed && !_hasInitializationError;
 
-  LiveStreamBetterPlayerController(String videoUrl, {VideoPlayerMode mode = VideoPlayerMode.liveStream}) 
-    : _mode = mode {
+  LiveStreamBetterPlayerController(String videoUrl) {
     _initializeController(videoUrl);
   }
 
@@ -34,13 +27,8 @@ class LiveStreamBetterPlayerController {
     if (_isDisposed) return;
 
     try {
-      final config = _mode == VideoPlayerMode.liveStream 
-        ? _createLiveStreamConfig() 
-        : _createSyncVideoConfig();
-
-      final dataSource = _mode == VideoPlayerMode.liveStream
-        ? _createLiveStreamDataSource(videoUrl)
-        : _createSyncVideoDataSource(videoUrl);
+      final config = _createLiveStreamConfig();
+      final dataSource = _createLiveStreamDataSource(videoUrl);
 
       if (!_isDisposed) {
         _controller = BetterPlayerController(
@@ -48,17 +36,12 @@ class LiveStreamBetterPlayerController {
           betterPlayerDataSource: dataSource,
         );
         
-        // Configure controller based on mode
+        // Configure controller for live stream
         Timer(const Duration(milliseconds: 100), () {
           if (!_isDisposed && _controller != null) {
             try {
-              if (_mode == VideoPlayerMode.liveStream) {
-                _controller!.setControlsEnabled(false);
-                _controller!.play();
-              } else {
-                // For sync video, just seek to start and don't auto-play
-                _controller!.seekTo(Duration.zero);
-              }
+              _controller!.setControlsEnabled(false);
+              _controller!.play();
             } catch (e) {
               debugPrint('Error configuring controller: $e');
             }
@@ -165,33 +148,6 @@ class LiveStreamBetterPlayerController {
     );
   }
 
-  BetterPlayerConfiguration _createSyncVideoConfig() {
-    return const BetterPlayerConfiguration(
-      aspectRatio: 16 / 9,
-      autoPlay: false,
-      startAt: Duration.zero,
-      handleLifecycle: false,
-      allowedScreenSleep: true,
-      autoDetectFullscreenDeviceOrientation: false,
-      deviceOrientationsAfterFullScreen: [],
-      controlsConfiguration: BetterPlayerControlsConfiguration(
-        showControls: false,
-        enableOverflowMenu: false,
-        enablePlayPause: false,
-        enableMute: false,
-        enableFullscreen: false,
-        enablePip: false,
-        enablePlaybackSpeed: false,
-        enableProgressText: false,
-        enableProgressBar: false,
-        enableSkips: false,
-        enableAudioTracks: false,
-        enableSubtitles: false,
-        enableQualities: false,
-      ),
-    );
-  }
-
   BetterPlayerDataSource _createLiveStreamDataSource(String videoUrl) {
     return BetterPlayerDataSource(
       BetterPlayerDataSourceType.network, 
@@ -208,25 +164,6 @@ class LiveStreamBetterPlayerController {
     );
   }
 
-  BetterPlayerDataSource _createSyncVideoDataSource(String videoUrl) {
-    return BetterPlayerDataSource(
-      BetterPlayerDataSourceType.network,
-      videoUrl,
-      liveStream: false,
-      videoFormat: BetterPlayerVideoFormat.other,
-      bufferingConfiguration: const BetterPlayerBufferingConfiguration(
-        minBufferMs: 500,
-        maxBufferMs: 2000,
-        bufferForPlaybackMs: 200,
-        bufferForPlaybackAfterRebufferMs: 500,
-      ),
-      headers: {
-        'Accept': 'video/mp4;q=0.5, video/webm;q=0.3, video/*;q=0.1',
-        'User-Agent': 'Flutter-OptimizedPlayer/1.0',
-        'Range': 'bytes=0-',
-      },
-    );
-  }
 
   void dispose() {
     if (_isDisposed) return;

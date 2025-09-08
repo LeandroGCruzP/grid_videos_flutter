@@ -3,17 +3,11 @@ import 'dart:async';
 import 'package:better_player/better_player.dart';
 import 'package:flutter/material.dart';
 
-enum VideoPlayerMode {
-  liveStream,
-  syncVideo,
-}
-
 class SyncVideoBetterPlayerController {
   BetterPlayerController? _controller;
   bool _isDisposed = false;
   bool _hasInitializationError = false;
   Timer? _errorCheckTimer;
-  final VideoPlayerMode _mode;
 
   BetterPlayerController get controller {
     if (_controller == null || _isDisposed || _hasInitializationError) {
@@ -25,8 +19,7 @@ class SyncVideoBetterPlayerController {
   bool get hasError => _hasInitializationError;
   bool get isReady => _controller != null && !_isDisposed && !_hasInitializationError;
 
-  SyncVideoBetterPlayerController(String videoUrl, {VideoPlayerMode mode = VideoPlayerMode.liveStream}) 
-    : _mode = mode {
+  SyncVideoBetterPlayerController(String videoUrl) {
     _initializeController(videoUrl);
   }
 
@@ -34,13 +27,8 @@ class SyncVideoBetterPlayerController {
     if (_isDisposed) return;
 
     try {
-      final config = _mode == VideoPlayerMode.liveStream 
-        ? _createLiveStreamConfig() 
-        : _createSyncVideoConfig();
-
-      final dataSource = _mode == VideoPlayerMode.liveStream
-        ? _createLiveStreamDataSource(videoUrl)
-        : _createSyncVideoDataSource(videoUrl);
+      final config = _createSyncVideoConfig();
+      final dataSource = _createSyncVideoDataSource(videoUrl);
 
       if (!_isDisposed) {
         _controller = BetterPlayerController(
@@ -48,17 +36,12 @@ class SyncVideoBetterPlayerController {
           betterPlayerDataSource: dataSource,
         );
         
-        // Configure controller based on mode
+        // Configure controller for sync video
         Timer(const Duration(milliseconds: 100), () {
           if (!_isDisposed && _controller != null) {
             try {
-              if (_mode == VideoPlayerMode.liveStream) {
-                _controller!.setControlsEnabled(false);
-                _controller!.play();
-              } else {
-                // For sync video, just seek to start and don't auto-play
-                _controller!.seekTo(Duration.zero);
-              }
+              // For sync video, just seek to start and don't auto-play
+              _controller!.seekTo(Duration.zero);
             } catch (e) {
               debugPrint('Error configuring controller: $e');
             }
@@ -121,54 +104,11 @@ class SyncVideoBetterPlayerController {
     });
   }
 
-  BetterPlayerConfiguration _createLiveStreamConfig() {
-    return BetterPlayerConfiguration(
-      aspectRatio: 16 / 9,
-      autoPlay: true,
-      handleLifecycle: false,
-      allowedScreenSleep: false,
-      autoDetectFullscreenDeviceOrientation: false,
-      errorBuilder: (context, errorMessage) {
-        return Container(
-          color: Colors.black,
-          child: const Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.error_outline,
-                  color: Colors.red,
-                  size: 48,
-                ),
-                SizedBox(height: 16),
-                Text(
-                  'Live unavailable',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                SizedBox(height: 8),
-                Text(
-                  'Connection error',
-                  style: TextStyle(
-                    color: Colors.grey,
-                    fontSize: 12,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
 
   BetterPlayerConfiguration _createSyncVideoConfig() {
     return const BetterPlayerConfiguration(
       aspectRatio: 16 / 9,
-      autoPlay: false,
+      autoPlay: true,
       startAt: Duration.zero,
       handleLifecycle: false,
       allowedScreenSleep: true,
@@ -192,21 +132,6 @@ class SyncVideoBetterPlayerController {
     );
   }
 
-  BetterPlayerDataSource _createLiveStreamDataSource(String videoUrl) {
-    return BetterPlayerDataSource(
-      BetterPlayerDataSourceType.network, 
-      videoUrl,
-      liveStream: true,
-      videoFormat: BetterPlayerVideoFormat.hls,
-      bufferingConfiguration: const BetterPlayerBufferingConfiguration(
-        minBufferMs: 2000,
-        maxBufferMs: 10000,
-        bufferForPlaybackMs: 1000,
-        bufferForPlaybackAfterRebufferMs: 2000,
-      ),
-      videoExtension: 'm3u8',
-    );
-  }
 
   BetterPlayerDataSource _createSyncVideoDataSource(String videoUrl) {
     return BetterPlayerDataSource(
