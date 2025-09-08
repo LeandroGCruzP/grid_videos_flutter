@@ -108,23 +108,44 @@ class _SyncDockState extends State<SyncDock> {
       return;
     }
     
-    // Check current state of all videos
+    // Check current state of all videos and if they've ended
     final playingVideos = <int>[];
     final pausedVideos = <int>[];
+    final endedVideos = <int>[];
     
     for (int i = 0; i < widget.allControllers.length; i++) {
       final controller = widget.allControllers[i];
-      final isCurrentlyPlaying = controller.videoPlayerController?.value.isPlaying ?? false;
-      if (isCurrentlyPlaying) {
-        playingVideos.add(i);
-      } else {
-        pausedVideos.add(i);
+      final videoController = controller.videoPlayerController;
+      if (videoController != null) {
+        final isCurrentlyPlaying = videoController.value.isPlaying;
+        final position = videoController.value.position;
+        final duration = videoController.value.duration ?? Duration.zero;
+        
+        // Check if video has ended (position is at or very close to duration)
+        final hasEnded = duration.inMilliseconds > 0 && 
+            (position.inMilliseconds >= duration.inMilliseconds - 1000); // 1s tolerance
+        
+        if (hasEnded) {
+          endedVideos.add(i);
+        } else if (isCurrentlyPlaying) {
+          playingVideos.add(i);
+        } else {
+          pausedVideos.add(i);
+        }
       }
     }
     
-    debugPrint('SyncDock: Current state - Playing: $playingVideos, Paused: $pausedVideos');
+    // debugPrint('SyncDock: Current state - Playing: $playingVideos, Paused: $pausedVideos, Ended: $endedVideos');
     
-    // Decide action based on majority or if any is playing, pause all, otherwise play all
+    // If all videos have ended, restart from beginning
+    if (endedVideos.length == widget.allControllers.length) {
+      debugPrint('SyncDock: All videos ended, restarting from beginning');
+      await _seekAll(Duration.zero);
+      // Small delay to ensure seek completed before playing
+      await Future.delayed(const Duration(milliseconds: 100));
+    }
+    
+    // Decide action based on current state
     final shouldPause = playingVideos.isNotEmpty;
     
     debugPrint('SyncDock: Action - ${shouldPause ? "Pausing" : "Playing"} all ${widget.allControllers.length} videos');
