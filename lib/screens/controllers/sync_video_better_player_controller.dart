@@ -35,18 +35,9 @@ class SyncVideoBetterPlayerController {
           config,
           betterPlayerDataSource: dataSource,
         );
-        
-        // Configure controller for sync video
-        Timer(const Duration(milliseconds: 100), () {
-          if (!_isDisposed && _controller != null) {
-            try {
-              // For sync video, just seek to start and don't auto-play
-              _controller!.seekTo(Duration.zero);
-            } catch (e) {
-              debugPrint('Error configuring controller: $e');
-            }
-          }
-        });
+
+        _controller!.setVolume(0.0);
+        _controller!.setControlsVisibility(false);
         
         // Start monitoring for early codec errors
         _startErrorMonitoring();
