@@ -25,12 +25,6 @@ class _LiveStreamLayoutState extends State<LiveStreamLayout> {
     });
   }
 
-  void _toggleDock() {
-    setState(() {
-      _showDock = !_showDock;
-    });
-  }
-
   void _adjustThumbnailStartIndex() {
     final availableIndices = _getAvailableIndices();
     if (_thumbnailStartIndex >= availableIndices.length) {
@@ -87,6 +81,12 @@ class _LiveStreamLayoutState extends State<LiveStreamLayout> {
 
   bool get _canGoBack {
     return _thumbnailStartIndex > 0;
+  }
+
+  void _toggleDock() {
+    setState(() {
+      _showDock = !_showDock;
+    });
   }
 
   @override
@@ -149,88 +149,90 @@ class _LiveStreamLayoutState extends State<LiveStreamLayout> {
             ),
           ),
         ),
-            if (widget.videoUrls.length > 1)
-              Expanded(
-                flex: 1,
-                child: Container(
-                  margin: const EdgeInsets.only(right: 4, top: 4, bottom: 4),
-                  child: Column(
-                    children: [
-                      if (_canGoBack)
-                        Container(
-                          margin: const EdgeInsets.only(bottom: 4),
-                          child: GestureDetector(
-                            onTap: _previousThumbnails,
-                            child: Container(
-                              height: 40,
-                              decoration: BoxDecoration(
-                                color: Colors.black.withOpacity(0.7),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: const Center(
-                                child: Icon(Icons.keyboard_arrow_up, color: Colors.white),
+
+        // Optimized thumbnails with navigation
+        if (widget.videoUrls.length > 1)
+          Expanded(
+            flex: 1,
+            child: Container(
+              margin: const EdgeInsets.only(right: 4, top: 4, bottom: 4),
+              child: Column(
+                children: [
+                  if (_canGoBack)
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 4),
+                      child: GestureDetector(
+                        onTap: _previousThumbnails,
+                        child: Container(
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.7),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: const Center(
+                            child: Icon(Icons.keyboard_arrow_up, color: Colors.white),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ..._visibleThumbnailIndices.map((originalIndex) {
+                    return Expanded(
+                      child: Container(
+                        margin: const EdgeInsets.only(bottom: 4),
+                        child: GestureDetector(
+                          onTap: () => _setMainVideo(originalIndex),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              border: Border.all(color: const Color.fromARGB(31, 88, 88, 88), width: 2),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(5),
+                              child: LiveNetworkSafeVideo(
+                                key: ValueKey('thumbnail_video_${widget.videoUrls[originalIndex]}_$originalIndex'),
+                                videoUrl: widget.videoUrls[originalIndex],
                               ),
                             ),
                           ),
                         ),
-                      ..._visibleThumbnailIndices.map((originalIndex) {
-                        return Expanded(
-                          child: Container(
-                            margin: const EdgeInsets.only(bottom: 4),
-                            child: GestureDetector(
-                              onTap: () => _setMainVideo(originalIndex),
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  border: Border.all(color: const Color.fromARGB(31, 88, 88, 88), width: 2),
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(5),
-                                  child: LiveNetworkSafeVideo(
-                                    key: ValueKey('thumbnail_video_${widget.videoUrls[originalIndex]}_$originalIndex'),
-                                    videoUrl: widget.videoUrls[originalIndex],
+                      ),
+                    );
+                  }),
+                  if (_hasMoreThumbnails)
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 4),
+                      child: GestureDetector(
+                        onTap: _nextThumbnails,
+                        child: Container(
+                          height: 60,
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.8),
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(color: const Color.fromARGB(31, 88, 88, 88), width: 2),
+                          ),
+                          child: Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(Icons.keyboard_arrow_down, color: Colors.white, size: 20),
+                                Text(
+                                  '+$_remainingThumbnails',
+                                  style: const TextStyle(
+                                    color: Colors.orange,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12,
                                   ),
                                 ),
-                              ),
-                            ),
-                          ),
-                        );
-                      }),
-                      if (_hasMoreThumbnails)
-                        Container(
-                          margin: const EdgeInsets.only(bottom: 4),
-                          child: GestureDetector(
-                            onTap: _nextThumbnails,
-                            child: Container(
-                              height: 60,
-                              decoration: BoxDecoration(
-                                color: Colors.black.withOpacity(0.8),
-                                borderRadius: BorderRadius.circular(6),
-                                border: Border.all(color: const Color.fromARGB(31, 88, 88, 88), width: 2),
-                              ),
-                              child: Center(
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    const Icon(Icons.keyboard_arrow_down, color: Colors.white, size: 20),
-                                    Text(
-                                      '+$_remainingThumbnails',
-                                      style: const TextStyle(
-                                        color: Colors.orange,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 12,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
+                              ],
                             ),
                           ),
                         ),
-                    ],
-                  ),
-                ),
+                      ),
+                    ),
+                ],
               ),
+            ),
+          ),
         ],
       ),
         if (_showDock)
