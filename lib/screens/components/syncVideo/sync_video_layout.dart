@@ -22,6 +22,9 @@ class _SyncVideoLayoutState extends State<SyncVideoLayout> {
   int _mainVideoIndex = 0;
   bool _showDock = false;
   bool _allControllersReady = false;
+  int _thumbnailStartIndex = 0;
+  
+  static const int maxTotalVideos = 3;
 
   @override
   void initState() {
@@ -102,21 +105,67 @@ class _SyncVideoLayoutState extends State<SyncVideoLayout> {
       setState(() {
         _mainVideoIndex = index;
         _showDock = false;
+        _adjustThumbnailStartIndex();
       });
     }
   }
 
-  void _toggleDock() {
+  void _adjustThumbnailStartIndex() {
+    final availableIndices = _getAvailableIndices();
+    if (_thumbnailStartIndex >= availableIndices.length) {
+      _thumbnailStartIndex = 0;
+    }
+  }
+
+  int get _maxVisibleThumbnails {
+    return maxTotalVideos - 1; // 1 for main video
+  }
+
+  void _nextThumbnails() {
     setState(() {
-      _showDock = !_showDock;
+      final availableIndices = _getAvailableIndices();
+      final maxThumbnailsToShow = _maxVisibleThumbnails;
+      if (_thumbnailStartIndex + maxThumbnailsToShow < availableIndices.length) {
+        _thumbnailStartIndex += maxThumbnailsToShow;
+      }
     });
   }
 
-  List<int> get _visibleThumbnailIndices {
-    List<int> indices =
-        List.generate(widget.videoUrls.length, (index) => index);
+  void _previousThumbnails() {
+    setState(() {
+      if (_thumbnailStartIndex > 0) {
+        final maxThumbnailsToShow = _maxVisibleThumbnails;
+        _thumbnailStartIndex = (_thumbnailStartIndex - maxThumbnailsToShow).clamp(0, double.infinity).toInt();
+      }
+    });
+  }
+
+  List<int> _getAvailableIndices() {
+    List<int> indices = List.generate(widget.videoUrls.length, (index) => index);
     indices.removeAt(_mainVideoIndex);
-    return indices.take(2).toList(); // Show only first 2 thumbnails
+    return indices;
+  }
+
+  List<int> get _visibleThumbnailIndices {
+    final availableIndices = _getAvailableIndices();
+    final maxThumbnailsToShow = _maxVisibleThumbnails;
+    final endIndex = (_thumbnailStartIndex + maxThumbnailsToShow).clamp(0, availableIndices.length);
+    return availableIndices.sublist(_thumbnailStartIndex, endIndex);
+  }
+
+  int get _remainingThumbnails {
+    final availableIndices = _getAvailableIndices();
+    final maxThumbnailsToShow = _maxVisibleThumbnails;
+    final remaining = availableIndices.length - _thumbnailStartIndex - maxThumbnailsToShow;
+    return remaining > 0 ? remaining : 0;
+  }
+
+  bool get _hasMoreThumbnails {
+    return _remainingThumbnails > 0;
+  }
+
+  bool get _canGoBack {
+    return _thumbnailStartIndex > 0;
   }
 
   List<BetterPlayerController> get _allControllers {
@@ -124,6 +173,12 @@ class _SyncVideoLayoutState extends State<SyncVideoLayout> {
         .where((controller) => controller != null && controller.isReady)
         .map((controller) => controller!.controller)
         .toList();
+  }
+
+  void _toggleDock() {
+    setState(() {
+      _showDock = !_showDock;
+    });
   }
 
   @override
@@ -232,33 +287,85 @@ class _SyncVideoLayoutState extends State<SyncVideoLayout> {
               ),
             ),
 
-            // Optimized thumbnails
+            // Optimized thumbnails with navigation
             if (widget.videoUrls.length > 1)
               Expanded(
                 flex: 1,
                 child: Container(
                   margin: const EdgeInsets.only(right: 4, top: 4, bottom: 4),
                   child: Column(
-                    children: _visibleThumbnailIndices.map((originalIndex) {
-                      return Expanded(
-                        child: Container(
+                    children: [
+                      if (_canGoBack) ...[
+                        Container(
                           margin: const EdgeInsets.only(bottom: 4),
                           child: GestureDetector(
-                            onTap: () => _setMainVideo(originalIndex),
+                            onTap: _previousThumbnails,
                             child: Container(
+                              height: 40,
                               decoration: BoxDecoration(
-                                border: Border.all(color: const Color.fromARGB(31, 88, 88, 88), width: 2),
+                                color: Colors.black.withOpacity(0.7),
                                 borderRadius: BorderRadius.circular(6),
                               ),
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(5),
-                                child: _buildOptimizedVideo(originalIndex),
+                              child: const Center(
+                                child: Icon(Icons.keyboard_arrow_up, color: Colors.white),
                               ),
                             ),
                           ),
                         ),
-                      );
-                    }).toList(),
+                      ],
+                      ..._visibleThumbnailIndices.map((originalIndex) {
+                        return Expanded(
+                          child: Container(
+                            margin: const EdgeInsets.only(bottom: 4),
+                            child: GestureDetector(
+                              onTap: () => _setMainVideo(originalIndex),
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: const Color.fromARGB(31, 88, 88, 88), width: 2),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(5),
+                                  child: _buildOptimizedVideo(originalIndex),
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      }),
+                      if (_hasMoreThumbnails) ...[
+                        Container(
+                          margin: const EdgeInsets.only(bottom: 4),
+                          child: GestureDetector(
+                            onTap: _nextThumbnails,
+                            child: Container(
+                              height: 60,
+                              decoration: BoxDecoration(
+                                color: Colors.black.withOpacity(0.8),
+                                borderRadius: BorderRadius.circular(6),
+                                border: Border.all(color: const Color.fromARGB(31, 88, 88, 88), width: 2),
+                              ),
+                              child: Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    const Icon(Icons.keyboard_arrow_down, color: Colors.white, size: 20),
+                                    Text(
+                                      '+$_remainingThumbnails',
+                                      style: const TextStyle(
+                                        color: Colors.orange,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ]
+                    ]
                   ),
                 ),
               ),
