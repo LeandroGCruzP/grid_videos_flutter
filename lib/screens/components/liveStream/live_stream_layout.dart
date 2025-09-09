@@ -19,11 +19,13 @@ class _LiveStreamLayoutState extends State<LiveStreamLayout> {
   static const int maxTotalVideos = 3;
 
   void _setMainVideo(int index) {
-    setState(() {
-      _mainVideoIndex = index;
-      _showDock = false;
-      _adjustThumbnailStartIndex();
-    });
+    if (index != _mainVideoIndex) {
+      setState(() {
+        _mainVideoIndex = index;
+        _showDock = false;
+        _adjustThumbnailStartIndex();
+      });
+    }
   }
 
   void _adjustThumbnailStartIndex() {
@@ -159,7 +161,7 @@ class _LiveStreamLayoutState extends State<LiveStreamLayout> {
               margin: const EdgeInsets.only(right: 4, top: 4, bottom: 4),
               child: Column(
                 children: [
-                  if (_canGoBack)
+                  if (_canGoBack) ...[
                     Container(
                       margin: const EdgeInsets.only(bottom: 4),
                       child: GestureDetector(
@@ -176,6 +178,7 @@ class _LiveStreamLayoutState extends State<LiveStreamLayout> {
                         ),
                       ),
                     ),
+                  ],
                   ..._visibleThumbnailIndices.map((originalIndex) {
                     return Expanded(
                       child: Container(
@@ -199,7 +202,7 @@ class _LiveStreamLayoutState extends State<LiveStreamLayout> {
                       ),
                     );
                   }),
-                  if (_hasMoreThumbnails)
+                  if (_hasMoreThumbnails) ...[
                     Container(
                       margin: const EdgeInsets.only(bottom: 4),
                       child: GestureDetector(
@@ -230,6 +233,7 @@ class _LiveStreamLayoutState extends State<LiveStreamLayout> {
                         ),
                       ),
                     ),
+                  ]
                 ],
               ),
             ),
