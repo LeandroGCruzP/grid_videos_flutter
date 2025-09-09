@@ -23,6 +23,7 @@ class _SyncVideoLayoutState extends State<SyncVideoLayout> {
   bool _showDock = false;
   bool _allControllersReady = false;
   int _thumbnailStartIndex = 0;
+  Duration _currentSyncTime = Duration.zero;
   
   static const int maxTotalVideos = 3;
 
@@ -138,6 +139,11 @@ class _SyncVideoLayoutState extends State<SyncVideoLayout> {
     });
     _loadVisibleThumbnailControllers();
     _manageControllerPool();
+    
+    // Sync newly visible controllers after a brief delay
+    Timer(const Duration(milliseconds: 1000), () {
+      _syncAllVisibleControllers();
+    });
   }
 
   void _previousThumbnails() {
@@ -149,6 +155,11 @@ class _SyncVideoLayoutState extends State<SyncVideoLayout> {
     });
     _loadVisibleThumbnailControllers();
     _manageControllerPool();
+    
+    // Sync newly visible controllers after a brief delay
+    Timer(const Duration(milliseconds: 1000), () {
+      _syncAllVisibleControllers();
+    });
   }
 
   List<int> _getAvailableIndices() {
@@ -195,14 +206,85 @@ class _SyncVideoLayoutState extends State<SyncVideoLayout> {
   void _ensureControllerLoaded(int index) {
     if (_controllers[index] == null) {
       _createOptimizedController(index);
+      // Sync new controller to current time after a brief delay
+      Timer(const Duration(milliseconds: 500), () {
+        _syncControllerToCurrentTime(index);
+      });
     }
   }
 
   void _loadVisibleThumbnailControllers() {
     final visibleIndices = _visibleThumbnailIndices;
     for (final index in visibleIndices) {
+      final wasNew = _controllers[index] == null;
       _ensureControllerLoaded(index);
+      
+      // If this was a new controller, sync it after a delay
+      if (wasNew) {
+        Timer(const Duration(milliseconds: 800), () {
+          _syncControllerToCurrentTime(index);
+        });
+      }
     }
+  }
+
+  void _updateCurrentSyncTime() {
+    // Get current time from main video controller
+    final mainController = _controllers[_mainVideoIndex];
+    if (mainController != null && mainController.isReady) {
+      try {
+        final videoController = mainController.controller.videoPlayerController;
+        if (videoController != null) {
+          _currentSyncTime = videoController.value.position;
+        }
+      } catch (e) {
+        debugPrint('Error getting current sync time: $e');
+      }
+    }
+  }
+
+  Future<void> _syncControllerToCurrentTime(int index) async {
+    final controller = _controllers[index];
+    if (controller == null) return;
+    
+    // Wait for controller to be ready with retries
+    for (int attempt = 0; attempt < 10; attempt++) {
+      if (controller.isReady) break;
+      await Future.delayed(const Duration(milliseconds: 100));
+    }
+    
+    if (!controller.isReady) {
+      debugPrint('Controller $index not ready for sync after 1s');
+      return;
+    }
+    
+    _updateCurrentSyncTime();
+    
+    if (_currentSyncTime > Duration.zero) {
+      try {
+        await controller.controller.seekTo(_currentSyncTime);
+        debugPrint('✅ Synced controller $index to ${_currentSyncTime.inSeconds}s');
+      } catch (e) {
+        debugPrint('❌ Error syncing controller $index: $e');
+      }
+    }
+  }
+
+  Future<void> _syncAllVisibleControllers() async {
+    _updateCurrentSyncTime();
+    
+    if (_currentSyncTime <= Duration.zero) return;
+    
+    final futures = <Future>[];
+    
+    // Sync visible thumbnail controllers
+    for (final index in _visibleThumbnailIndices) {
+      if (_controllers[index] != null && _controllers[index]!.isReady) {
+        futures.add(_syncControllerToCurrentTime(index));
+      }
+    }
+    
+    await Future.wait(futures);
   }
 
   void _manageControllerPool() {
