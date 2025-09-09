@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:better_player/better_player.dart';
 import 'package:flutter/material.dart';
+import 'package:multi_video/screens/components/button_go_back.dart';
 import 'package:multi_video/screens/controllers/sync_video_better_player_controller.dart';
 
 import 'sync_dock.dart';
@@ -264,26 +265,10 @@ class _SyncVideoLayoutState extends State<SyncVideoLayout> {
           ],
         ),
         if (_showDock)
-          Positioned(
+          const Positioned(
             top: 16,
             left: 16,
-            child: Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.7),
-                shape: BoxShape.circle,
-                border: Border.all(color: const Color.fromARGB(31, 88, 88, 88), width: 1),
-              ),
-              child: IconButton(
-                onPressed: () => Navigator.of(context).pop(),
-                icon: const Icon(
-                  Icons.arrow_back,
-                  color: Colors.white,
-                  size: 24,
-                ),
-              ),
-            ),
+            child: ButtonGoBack()
           ),
       ],
     );

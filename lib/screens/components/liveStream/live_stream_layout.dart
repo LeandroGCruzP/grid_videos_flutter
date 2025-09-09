@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:multi_video/screens/components/button_go_back.dart';
 import 'package:multi_video/screens/components/liveStream/live_network_safe_video.dart';
 
 class LiveStreamLayout extends StatefulWidget {
@@ -236,26 +237,10 @@ class _LiveStreamLayoutState extends State<LiveStreamLayout> {
         ],
       ),
         if (_showDock)
-          Positioned(
+          const Positioned(
             top: 16,
             left: 16,
-            child: Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.7),
-                shape: BoxShape.circle,
-                border: Border.all(color: const Color.fromARGB(31, 88, 88, 88), width: 2),
-              ),
-              child: IconButton(
-                onPressed: () => Navigator.of(context).pop(),
-                icon: const Icon(
-                  Icons.arrow_back,
-                  color: Colors.white,
-                  size: 24,
-                ),
-              ),
-            ),
+            child: ButtonGoBack()
           ),
       ],
     );
