@@ -37,11 +37,14 @@ class _SyncVideoLayoutState extends State<SyncVideoLayout> {
   }
 
   Future<void> _initializeControllers() async {
-    for (int i = 0; i < widget.videoUrls.length; i++) {
-      if (_controllers[i] == null) {
-        _createOptimizedController(i);
-      }
+    // Initialize only the main video and first few thumbnails
+    _createOptimizedController(_mainVideoIndex); // Main video
+    
+    final visibleIndices = _visibleThumbnailIndices;
+    for (int i = 0; i < visibleIndices.length && i < maxTotalVideos - 1; i++) {
+      _createOptimizedController(visibleIndices[i]);
     }
+    
     _checkIfAllControllersReady();
   }
 
@@ -107,6 +110,10 @@ class _SyncVideoLayoutState extends State<SyncVideoLayout> {
         _showDock = false;
         _adjustThumbnailStartIndex();
       });
+      
+      // Ensure the new main video controller is loaded
+      _ensureControllerLoaded(index);
+      _manageControllerPool();
     }
   }
 
@@ -129,6 +136,8 @@ class _SyncVideoLayoutState extends State<SyncVideoLayout> {
         _thumbnailStartIndex += maxThumbnailsToShow;
       }
     });
+    _loadVisibleThumbnailControllers();
+    _manageControllerPool();
   }
 
   void _previousThumbnails() {
@@ -138,6 +147,8 @@ class _SyncVideoLayoutState extends State<SyncVideoLayout> {
         _thumbnailStartIndex = (_thumbnailStartIndex - maxThumbnailsToShow).clamp(0, double.infinity).toInt();
       }
     });
+    _loadVisibleThumbnailControllers();
+    _manageControllerPool();
   }
 
   List<int> _getAvailableIndices() {
@@ -179,6 +190,59 @@ class _SyncVideoLayoutState extends State<SyncVideoLayout> {
     setState(() {
       _showDock = !_showDock;
     });
+  }
+
+  void _ensureControllerLoaded(int index) {
+    if (_controllers[index] == null) {
+      _createOptimizedController(index);
+    }
+  }
+
+  void _loadVisibleThumbnailControllers() {
+    final visibleIndices = _visibleThumbnailIndices;
+    for (final index in visibleIndices) {
+      _ensureControllerLoaded(index);
+    }
+  }
+
+  void _manageControllerPool() {
+    final activeControllers = <int>[];
+    
+    // Always keep main video
+    activeControllers.add(_mainVideoIndex);
+    
+    // Add visible thumbnails
+    activeControllers.addAll(_visibleThumbnailIndices);
+    
+    // Count current loaded controllers
+    final loadedControllers = <int>[];
+    for (int i = 0; i < _controllers.length; i++) {
+      if (_controllers[i] != null) {
+        loadedControllers.add(i);
+      }
+    }
+    
+    // If we have too many controllers, dispose the ones not visible
+    if (loadedControllers.length > maxTotalVideos) {
+      final controllersToDispose = loadedControllers
+          .where((index) => !activeControllers.contains(index))
+          .toList();
+      
+      // Sort by priority (further from main video and visible thumbnails)
+      controllersToDispose.sort((a, b) {
+        final aDistance = (a - _mainVideoIndex).abs();
+        final bDistance = (b - _mainVideoIndex).abs();
+        return bDistance.compareTo(aDistance); // Dispose furthest first
+      });
+      
+      // Dispose excess controllers
+      final excessCount = loadedControllers.length - maxTotalVideos;
+      for (int i = 0; i < excessCount && i < controllersToDispose.length; i++) {
+        final index = controllersToDispose[i];
+        _controllers[index]?.dispose();
+        _controllers[index] = null;
+      }
+    }
   }
 
   @override
