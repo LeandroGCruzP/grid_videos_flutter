@@ -19,11 +19,13 @@ class SyncVideoLayout extends StatefulWidget {
 
 class _SyncVideoLayoutState extends State<SyncVideoLayout> {
   final List<SyncVideoBetterPlayerController?> _controllers = [];
+  final Map<int, Duration> _videoDurations = {}; // Cache video durations
   int _mainVideoIndex = 0;
   bool _showDock = false;
   bool _allControllersReady = false;
   int _thumbnailStartIndex = 0;
   Duration _currentSyncTime = Duration.zero;
+  Duration _maxKnownDuration = Duration.zero;
   
   static const int maxTotalVideos = 3;
 
@@ -58,11 +60,30 @@ class _SyncVideoLayoutState extends State<SyncVideoLayout> {
           _controllers[index] = controller;
         });
 
-        // Check if all controllers are ready periodically
+        // Check if all controllers are ready periodically and cache duration
         Timer.periodic(const Duration(milliseconds: 200), (timer) {
           if (!mounted) {
             timer.cancel();
             return;
+          }
+
+          // Cache duration when available
+          if (controller.isReady && !_videoDurations.containsKey(index)) {
+            try {
+              final videoController = controller.controller.videoPlayerController;
+              if (videoController?.value.duration != null) {
+                final duration = videoController!.value.duration!;
+                _videoDurations[index] = duration;
+                
+                // Update max known duration
+                if (duration > _maxKnownDuration) {
+                  _maxKnownDuration = duration;
+                  debugPrint('📏 New max duration found: ${duration.inSeconds}s from video $index');
+                }
+              }
+            } catch (e) {
+              debugPrint('Error caching duration for video $index: $e');
+            }
           }
 
           _checkIfAllControllersReady();
@@ -106,17 +127,12 @@ class _SyncVideoLayoutState extends State<SyncVideoLayout> {
 
   void _setMainVideo(int index) {
     if (index != _mainVideoIndex) {
-      final oldMainIndex = _mainVideoIndex;
-      final oldThumbnailStart = _thumbnailStartIndex;
-      final oldVisibleThumbnails = _visibleThumbnailIndices.toList();
-      
       setState(() {
         _mainVideoIndex = index;
         _showDock = false;
         _adjustThumbnailStartIndex();
       });
       
-      final newVisibleThumbnails = _visibleThumbnailIndices.toList();
       
       // Ensure the new main video controller is loaded
       _ensureControllerLoaded(index);
@@ -216,6 +232,14 @@ class _SyncVideoLayoutState extends State<SyncVideoLayout> {
         .where((controller) => controller != null && controller.isReady)
         .map((controller) => controller!.controller)
         .toList();
+  }
+  
+  Duration get _globalMaxDuration {
+    // Return the maximum duration found across all videos (even disposed ones)
+    if (_videoDurations.isNotEmpty) {
+      return _videoDurations.values.reduce((a, b) => a > b ? a : b);
+    }
+    return _maxKnownDuration;
   }
 
   void _toggleDock() {
@@ -325,11 +349,11 @@ class _SyncVideoLayoutState extends State<SyncVideoLayout> {
       }
     }
     
-    // Keep the original limit to avoid memory issues
-    const generousLimit = maxTotalVideos; // Keep at 3 controllers for performance
+    // Ultra-conservative limit - only absolutely essential controllers
+    const strictLimit = 2; // Only main video + 1 thumbnail max to prevent memory issues
     
     // If we have too many controllers, dispose the ones not visible
-    if (loadedControllers.length > generousLimit) {
+    if (loadedControllers.length > strictLimit) {
       final controllersToDispose = loadedControllers
           .where((index) => !activeControllers.contains(index))
           .toList();
@@ -342,7 +366,7 @@ class _SyncVideoLayoutState extends State<SyncVideoLayout> {
       });
       
       // Dispose controllers aggressively to maintain performance
-      final excessCount = loadedControllers.length - generousLimit;
+      final excessCount = loadedControllers.length - strictLimit;
       
       for (int i = 0; i < excessCount && i < controllersToDispose.length; i++) {
         final index = controllersToDispose[i];
@@ -356,7 +380,7 @@ class _SyncVideoLayoutState extends State<SyncVideoLayout> {
         }
       }
     } else {
-      debugPrint('✅ Pool management: ${loadedControllers.length} controllers loaded (within limit of $generousLimit)');
+      debugPrint('✅ Pool management: ${loadedControllers.length} controllers loaded (within limit of $strictLimit)');
     }
   }
 
@@ -458,6 +482,7 @@ class _SyncVideoLayoutState extends State<SyncVideoLayout> {
                                     ? _controllers[_mainVideoIndex]!.controller
                                     : null,
                             allControllers: _allControllers,
+                            globalMaxDuration: _globalMaxDuration,
                           ),
                         ),
                       ),

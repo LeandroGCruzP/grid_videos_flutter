@@ -6,11 +6,13 @@ import 'package:flutter/material.dart';
 class SyncDock extends StatefulWidget {
   final BetterPlayerController? mainController;
   final List<BetterPlayerController> allControllers;
+  final Duration? globalMaxDuration;
 
   const SyncDock({
     super.key,
     this.mainController,
     required this.allControllers,
+    this.globalMaxDuration,
   });
 
   @override
@@ -61,10 +63,11 @@ class _SyncDockState extends State<SyncDock> {
   void _updateState() {
     if (!mounted || widget.allControllers.isEmpty) return;
     
-    // Find maximum duration among all controllers
-    Duration maxDuration = Duration.zero;
+    // Use global max duration if provided, otherwise find among active controllers
+    Duration maxDuration = widget.globalMaxDuration ?? Duration.zero;
     Duration maxCurrentPos = Duration.zero;
     bool anyPlaying = false;
+    bool anyStillHasTime = false; // Track if any video still has time left
     
     for (final controller in widget.allControllers) {
       final videoController = controller.videoPlayerController;
@@ -72,7 +75,8 @@ class _SyncDockState extends State<SyncDock> {
         final duration = videoController.value.duration ?? Duration.zero;
         final position = videoController.value.position;
         
-        if (duration > maxDuration) {
+        // Only update max duration if we don't have a global one
+        if (widget.globalMaxDuration == null && duration > maxDuration) {
           maxDuration = duration;
         }
         
@@ -81,14 +85,27 @@ class _SyncDockState extends State<SyncDock> {
           maxCurrentPos = position;
         }
         
-        if (videoController.value.isPlaying) {
+        // Check if this video is playing OR should continue playing (hasn't reached global max)
+        final videoHasEnded = duration.inMilliseconds > 0 && 
+            position.inMilliseconds >= duration.inMilliseconds - 500;
+        
+        if (videoController.value.isPlaying && !videoHasEnded) {
           anyPlaying = true;
+        }
+        
+        // Check if any video still has time relative to global duration
+        if (position.inMilliseconds < maxDuration.inMilliseconds - 1000) {
+          anyStillHasTime = true;
         }
       }
     }
     
+    // If we have global duration and videos still have time, consider as playing
+    // even if some individual videos have ended
+    final shouldShowAsPlaying = anyPlaying || (anyStillHasTime && _isPlaying);
+    
     setState(() {
-      _isPlaying = anyPlaying;
+      _isPlaying = shouldShowAsPlaying;
       _currentPosition = maxCurrentPos;
       _totalDuration = maxDuration;
     });
@@ -112,6 +129,7 @@ class _SyncDockState extends State<SyncDock> {
     final playingVideos = <int>[];
     final pausedVideos = <int>[];
     final endedVideos = <int>[];
+    final globalMaxDuration = widget.globalMaxDuration ?? Duration.zero;
     
     for (int i = 0; i < widget.allControllers.length; i++) {
       final controller = widget.allControllers[i];
@@ -121,13 +139,17 @@ class _SyncDockState extends State<SyncDock> {
         final position = videoController.value.position;
         final duration = videoController.value.duration ?? Duration.zero;
         
-        // Check if video has ended (position is at or very close to duration)
-        final hasEnded = duration.inMilliseconds > 0 && 
-            (position.inMilliseconds >= duration.inMilliseconds - 1000); // 1s tolerance
+        // Check if video has ended relative to its OWN duration
+        final hasEndedIndividually = duration.inMilliseconds > 0 && 
+            (position.inMilliseconds >= duration.inMilliseconds - 1000);
+            
+        // Check if we've reached the global max duration (all should stop)
+        final hasReachedGlobalEnd = globalMaxDuration.inMilliseconds > 0 &&
+            (position.inMilliseconds >= globalMaxDuration.inMilliseconds - 1000);
         
-        if (hasEnded) {
+        if (hasReachedGlobalEnd) {
           endedVideos.add(i);
-        } else if (isCurrentlyPlaying) {
+        } else if (isCurrentlyPlaying && !hasEndedIndividually) {
           playingVideos.add(i);
         } else {
           pausedVideos.add(i);
@@ -135,13 +157,16 @@ class _SyncDockState extends State<SyncDock> {
       }
     }
     
-    // debugPrint('SyncDock: Current state - Playing: $playingVideos, Paused: $pausedVideos, Ended: $endedVideos');
+    debugPrint('SyncDock: State - Playing: $playingVideos, Paused: $pausedVideos, Ended: $endedVideos (Global duration: ${globalMaxDuration.inSeconds}s)');
     
-    // If all videos have ended, restart from beginning
-    if (endedVideos.length == widget.allControllers.length) {
-      debugPrint('SyncDock: All videos ended, restarting from beginning');
+    // Only restart if we've reached the GLOBAL max duration
+    final currentMaxPosition = _getCurrentMaxPosition();
+    final shouldRestart = globalMaxDuration.inMilliseconds > 0 && 
+        currentMaxPosition.inMilliseconds >= globalMaxDuration.inMilliseconds - 1000;
+        
+    if (shouldRestart) {
+      debugPrint('SyncDock: Reached global max duration, restarting from beginning');
       await _seekAll(Duration.zero);
-      // Small delay to ensure seek completed before playing
       await Future.delayed(const Duration(milliseconds: 100));
     }
     
@@ -150,36 +175,82 @@ class _SyncDockState extends State<SyncDock> {
     
     debugPrint('SyncDock: Action - ${shouldPause ? "Pausing" : "Playing"} all ${widget.allControllers.length} videos');
     
-    // Apply action to all videos simultaneously
+    // Apply action to all videos simultaneously, but handle ended videos specially
     final futures = widget.allControllers.asMap().entries.map((entry) async {
       final index = entry.key;
       final controller = entry.value;
-      try {
-        if (shouldPause) {
-          await controller.pause();
-          debugPrint('SyncDock: Video $index paused');
-        } else {
-          await controller.play();
-          debugPrint('SyncDock: Video $index started');
+      final videoController = controller.videoPlayerController;
+      
+      if (videoController != null) {
+        final position = videoController.value.position;
+        final duration = videoController.value.duration ?? Duration.zero;
+        final hasEndedIndividually = duration.inMilliseconds > 0 && 
+            (position.inMilliseconds >= duration.inMilliseconds - 500);
+        
+        try {
+          if (shouldPause) {
+            await controller.pause();
+            debugPrint('SyncDock: Video $index paused');
+          } else {
+            // If video has ended individually but we're still within global time,
+            // don't try to play it (it will stay at last frame)
+            if (!hasEndedIndividually) {
+              await controller.play();
+              debugPrint('SyncDock: Video $index started');
+            } else {
+              debugPrint('SyncDock: Video $index ended individually, staying at last frame');
+            }
+          }
+        } catch (e) {
+          debugPrint('SyncDock: Error controlling video $index: $e');
         }
-      } catch (e) {
-        debugPrint('SyncDock: Error controlling video $index: $e');
       }
     });
     
     await Future.wait(futures);
     debugPrint('SyncDock: All videos synchronized - ${shouldPause ? "paused" : "playing"}');
   }
+  
+  Duration _getCurrentMaxPosition() {
+    Duration maxPos = Duration.zero;
+    for (final controller in widget.allControllers) {
+      final videoController = controller.videoPlayerController;
+      if (videoController != null) {
+        final position = videoController.value.position;
+        if (position > maxPos) {
+          maxPos = position;
+        }
+      }
+    }
+    return maxPos;
+  }
 
   Future<void> _seekAll(Duration position) async {
     debugPrint('SyncDock: Seeking all videos to ${position.inSeconds}s');
     
-    // Seek all videos simultaneously for perfect sync
-    final futures = widget.allControllers.map((controller) async {
-      try {
-        await controller.seekTo(position);
-      } catch (e) {
-        debugPrint('Error seeking video: $e');
+    // Seek all videos simultaneously, but respect individual video durations
+    final futures = widget.allControllers.asMap().entries.map((entry) async {
+      final index = entry.key;
+      final controller = entry.value;
+      final videoController = controller.videoPlayerController;
+      
+      if (videoController != null) {
+        final videoDuration = videoController.value.duration ?? Duration.zero;
+        
+        try {
+          // Don't seek beyond individual video duration
+          if (videoDuration.inMilliseconds > 0 && 
+              position.inMilliseconds > videoDuration.inMilliseconds) {
+            // Seek to the end of this specific video
+            await controller.seekTo(videoDuration);
+            debugPrint('SyncDock: Video $index seeked to its end (${videoDuration.inSeconds}s)');
+          } else {
+            await controller.seekTo(position);
+            debugPrint('SyncDock: Video $index seeked to ${position.inSeconds}s');
+          }
+        } catch (e) {
+          debugPrint('Error seeking video $index: $e');
+        }
       }
     });
     
