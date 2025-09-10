@@ -106,22 +106,43 @@ class _SyncVideoLayoutState extends State<SyncVideoLayout> {
 
   void _setMainVideo(int index) {
     if (index != _mainVideoIndex) {
+      final oldMainIndex = _mainVideoIndex;
+      final oldThumbnailStart = _thumbnailStartIndex;
+      final oldVisibleThumbnails = _visibleThumbnailIndices.toList();
+      
       setState(() {
         _mainVideoIndex = index;
         _showDock = false;
         _adjustThumbnailStartIndex();
       });
       
+      final newVisibleThumbnails = _visibleThumbnailIndices.toList();
+      
       // Ensure the new main video controller is loaded
       _ensureControllerLoaded(index);
       _manageControllerPool();
+      
+      // Load any new thumbnail controllers
+      _loadVisibleThumbnailControllers();
     }
   }
 
   void _adjustThumbnailStartIndex() {
     final availableIndices = _getAvailableIndices();
+    final maxThumbnailsToShow = _maxVisibleThumbnails;
+    
+    // Ensure the start index doesn't exceed bounds
     if (_thumbnailStartIndex >= availableIndices.length) {
       _thumbnailStartIndex = 0;
+    }
+    
+    // If we're in the middle of pages and the current page would be empty
+    // try to maintain the user's context by adjusting smartly
+    final endIndex = (_thumbnailStartIndex + maxThumbnailsToShow).clamp(0, availableIndices.length);
+    if (_thumbnailStartIndex >= endIndex && availableIndices.isNotEmpty) {
+      // Go to the last valid page
+      _thumbnailStartIndex = ((availableIndices.length - 1) ~/ maxThumbnailsToShow) * maxThumbnailsToShow;
+      _thumbnailStartIndex = _thumbnailStartIndex.clamp(0, availableIndices.length - 1);
     }
   }
 
@@ -304,8 +325,11 @@ class _SyncVideoLayoutState extends State<SyncVideoLayout> {
       }
     }
     
+    // Keep the original limit to avoid memory issues
+    const generousLimit = maxTotalVideos; // Keep at 3 controllers for performance
+    
     // If we have too many controllers, dispose the ones not visible
-    if (loadedControllers.length > maxTotalVideos) {
+    if (loadedControllers.length > generousLimit) {
       final controllersToDispose = loadedControllers
           .where((index) => !activeControllers.contains(index))
           .toList();
@@ -317,13 +341,22 @@ class _SyncVideoLayoutState extends State<SyncVideoLayout> {
         return bDistance.compareTo(aDistance); // Dispose furthest first
       });
       
-      // Dispose excess controllers
-      final excessCount = loadedControllers.length - maxTotalVideos;
+      // Dispose controllers aggressively to maintain performance
+      final excessCount = loadedControllers.length - generousLimit;
+      
       for (int i = 0; i < excessCount && i < controllersToDispose.length; i++) {
         final index = controllersToDispose[i];
-        _controllers[index]?.dispose();
-        _controllers[index] = null;
+        
+        try {
+          _controllers[index]?.dispose();
+          _controllers[index] = null;
+        } catch (e) {
+          debugPrint('❌ Error disposing controller $index: $e');
+          _controllers[index] = null;
+        }
       }
+    } else {
+      debugPrint('✅ Pool management: ${loadedControllers.length} controllers loaded (within limit of $generousLimit)');
     }
   }
 
