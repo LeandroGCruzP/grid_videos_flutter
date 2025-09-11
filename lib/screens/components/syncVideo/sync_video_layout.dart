@@ -442,36 +442,35 @@ class _SyncVideoLayoutState extends State<SyncVideoLayout> {
                 margin: const EdgeInsets.all(4),
                 child: Column(
                   children: [
-                    if (_showDock) ...[
-                      Expanded(
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            const ButtonGoBack(),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 10, vertical: 6),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF3D3D3C),
-                                borderRadius: BorderRadius.circular(35),
-                              ),
-                              child: Text(
-                                'Câmera ${_mainVideoIndex + 1}',
-                                style: const TextStyle(
-                                  color: Color(0xFFFFC501),
-                                  fontWeight: FontWeight.w500,
-                                  fontSize: 10,
-                                ),
+                    Expanded(
+                      flex: _showDock ? 1 : 0,
+                      child: _showDock ? Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          const ButtonGoBack(),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF3D3D3C),
+                              borderRadius: BorderRadius.circular(35),
+                            ),
+                            child: Text(
+                              'Câmera ${_mainVideoIndex + 1}',
+                              style: const TextStyle(
+                                color: Color(0xFFFFC501),
+                                fontWeight: FontWeight.w500,
+                                fontSize: 10,
                               ),
                             ),
-                            ButtonDownload(
-                              onPressed: () {},
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 3),
-                    ],
+                          ),
+                          ButtonDownload(
+                            onPressed: () {},
+                          ),
+                        ],
+                      ) : const SizedBox.shrink(),
+                    ),
                     // Main video area
                     Expanded(
                       flex: _showDock ? 3 : 4,
@@ -484,20 +483,18 @@ class _SyncVideoLayoutState extends State<SyncVideoLayout> {
                       ),
                     ),
                     // Dock
-                    if (_showDock) ...[
-                      Expanded(
-                        flex: 1,
-                        child: SyncDock(
-                          key: ValueKey('sync_dock_${_allControllers.length}'),
-                          mainController:
-                              _controllers[_mainVideoIndex]?.isReady == true
-                                  ? _controllers[_mainVideoIndex]!.controller
-                                  : null,
-                          allControllers: _allControllers,
-                          globalMaxDuration: _globalMaxDuration,
-                        ),
-                      ),
-                    ]
+                    Expanded(
+                      flex: _showDock ? 1 : 0,
+                      child: _showDock ? SyncDock(
+                        key: ValueKey('sync_dock_${_allControllers.length}'),
+                        mainController:
+                            _controllers[_mainVideoIndex]?.isReady == true
+                                ? _controllers[_mainVideoIndex]!.controller
+                                : null,
+                        allControllers: _allControllers,
+                        globalMaxDuration: _globalMaxDuration,
+                      ) : const SizedBox.shrink(),
+                    ),
                   ],
                 ),
               ),

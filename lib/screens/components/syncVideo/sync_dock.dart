@@ -267,120 +267,116 @@ class _SyncDockState extends State<SyncDock> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Column(
-        children: [
-          // Progress bar
-          Expanded(
-            child: Row(
-              children: [
-                // Time current
-                Text(
-                  _formatDuration(_currentPosition),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
+    return Column(
+      children: [
+        // Progress bar
+        Expanded(
+          child: Row(
+            children: [
+              // Time current
+              Text(
+                _formatDuration(_currentPosition),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                ),
+              ),
+              
+              // Progress slider
+              Expanded(
+                child: SliderTheme(
+                  data: SliderTheme.of(context).copyWith(
+                    activeTrackColor: const Color.fromARGB(255, 246, 221, 140),
+                    inactiveTrackColor: Colors.white.withOpacity(0.9),
+                    thumbColor: const Color(0xFFFFC501),
+                    thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
+                    trackHeight: 4,
+                  ),
+                  child: Slider(
+                    value: _totalDuration.inMilliseconds > 0
+                        ? (_currentPosition.inMilliseconds / _totalDuration.inMilliseconds).clamp(0.0, 1.0)
+                        : 0.0,
+                    onChanged: (value) {
+                      final position = Duration(
+                        milliseconds: (value * _totalDuration.inMilliseconds).round(),
+                      );
+                      _seekAll(position);
+                    },
                   ),
                 ),
-                
-                // Progress slider
-                Expanded(
-                  child: SliderTheme(
-                    data: SliderTheme.of(context).copyWith(
-                      activeTrackColor: const Color.fromARGB(255, 246, 221, 140),
-                      inactiveTrackColor: Colors.white.withOpacity(0.9),
-                      thumbColor: const Color(0xFFFFC501),
-                      thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
-                      trackHeight: 4,
-                    ),
-                    child: Slider(
-                      value: _totalDuration.inMilliseconds > 0
-                          ? (_currentPosition.inMilliseconds / _totalDuration.inMilliseconds).clamp(0.0, 1.0)
-                          : 0.0,
-                      onChanged: (value) {
-                        final position = Duration(
-                          milliseconds: (value * _totalDuration.inMilliseconds).round(),
-                        );
-                        _seekAll(position);
-                      },
-                    ),
-                  ),
+              ),
+              
+              // Time total
+              Text(
+                _formatDuration(_totalDuration),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
                 ),
-                
-                // Time total
-                Text(
-                  _formatDuration(_totalDuration),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
-          
-          // Controls row
-          Expanded(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // Skip back 10s
-                IconButton(
-                  onPressed: () {
-                    final newPosition = _currentPosition - const Duration(seconds: 10);
-                    _seekAll(newPosition.isNegative ? Duration.zero : newPosition);
-                  },
-                  padding: EdgeInsets.zero,
-                  icon: const Icon(
-                    Icons.replay_10,
-                    color: Colors.white,
-                    size: 32,
+        ),
+        
+        // Controls row
+        Expanded(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Skip back 10s
+              IconButton(
+                onPressed: () {
+                  final newPosition = _currentPosition - const Duration(seconds: 10);
+                  _seekAll(newPosition.isNegative ? Duration.zero : newPosition);
+                },
+                padding: EdgeInsets.zero,
+                icon: const Icon(
+                  Icons.replay_10,
+                  color: Colors.white,
+                  size: 32,
+                ),
+              ),
+              
+              const SizedBox(width: 16),
+              
+              // Play/Pause
+              Container(
+                width: 33,
+                height: 33,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: const Color.fromARGB(31, 88, 88, 88), width: 1),
+                ),
+                child: IconButton(
+                  onPressed: _playPauseAll,
+                  icon: Icon(
+                    _isPlaying ? Icons.pause : Icons.play_arrow,
+                    color: const Color(0xFF343432),
+                    size: 16,
                   ),
                 ),
-                
-                const SizedBox(width: 16),
-                
-                // Play/Pause
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                  ),
-                  child: IconButton(
-                    onPressed: _playPauseAll,
-                    alignment: Alignment.center,
-                    iconSize: 16,
-                    icon: Icon(
-                      _isPlaying ? Icons.pause : Icons.play_arrow,
-                      color: const Color(0xFF484847),
-                      size: 16,
-                    ),
-                  ),
+              ),
+    
+              const SizedBox(width: 16),
+              
+              // Skip forward 10s
+              IconButton(
+                onPressed: () {
+                  final newPosition = _currentPosition + const Duration(seconds: 10);
+                  _seekAll(newPosition > _totalDuration ? _totalDuration : newPosition);
+                },
+                padding: EdgeInsets.zero,
+                icon: const Icon(
+                  Icons.forward_10,
+                  color: Colors.white,
+                  size: 32,
                 ),
-
-                const SizedBox(width: 16),
-                
-                // Skip forward 10s
-                IconButton(
-                  onPressed: () {
-                    final newPosition = _currentPosition + const Duration(seconds: 10);
-                    _seekAll(newPosition > _totalDuration ? _totalDuration : newPosition);
-                  },
-                  padding: EdgeInsets.zero,
-                  icon: const Icon(
-                    Icons.forward_10,
-                    color: Colors.white,
-                    size: 32,
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
