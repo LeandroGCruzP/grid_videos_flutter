@@ -209,6 +209,13 @@ class _SyncDockState extends State<SyncDock> {
     
     await Future.wait(futures);
     debugPrint('SyncDock: All videos synchronized - ${shouldPause ? "paused" : "playing"}');
+    
+    // Update the UI state immediately
+    if (mounted) {
+      setState(() {
+        _isPlaying = !shouldPause;
+      });
+    }
   }
   
   Duration _getCurrentMaxPosition() {
