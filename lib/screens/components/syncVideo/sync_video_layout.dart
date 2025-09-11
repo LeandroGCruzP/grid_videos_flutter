@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:better_player/better_player.dart';
+import 'package:better_player_plus/better_player_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:multi_video/screens/components/button_go_back.dart';
 import 'package:multi_video/screens/components/syncVideo/button_download.dart';
