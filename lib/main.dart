@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:multi_video/screens/live_stream_page.dart';
-import 'package:multi_video/screens/sync_video_page.dart';
+import 'package:multi_video/screens/pages/live_stream_page.dart';
+import 'package:multi_video/screens/pages/sync_video_page.dart';
 
 void main() {
   // Global error handler to prevent crashes
