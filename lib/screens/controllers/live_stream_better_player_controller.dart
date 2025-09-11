@@ -106,7 +106,7 @@ class LiveStreamBetterPlayerController {
 
   BetterPlayerConfiguration _createLiveStreamConfig() {
     return BetterPlayerConfiguration(
-      aspectRatio: 16 / 9,
+      fit: BoxFit.contain,
       autoPlay: true,
       handleLifecycle: false,
       allowedScreenSleep: false,

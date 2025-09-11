@@ -141,13 +141,16 @@ class _LiveStreamLayoutState extends State<LiveStreamLayout> {
                       ) : const SizedBox.shrink(),
                     ),
                     // Main video area
-                    Expanded(
+                    Flexible(
                       flex: 4,
-                      child: ClipRRect(
-                        child: LiveNetworkSafeVideo(
-                          key: ValueKey('main_video_${widget.videoUrls[_mainVideoIndex]}_$_mainVideoIndex'),
-                          videoUrl: widget.videoUrls[_mainVideoIndex],
-                          onTap: _toggleDock,
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: Center(
+                          child: LiveNetworkSafeVideo(
+                            key: ValueKey('main_video_${widget.videoUrls[_mainVideoIndex]}_$_mainVideoIndex'),
+                            videoUrl: widget.videoUrls[_mainVideoIndex],
+                            onTap: _toggleDock,
+                          ),
                         ),
                       ),
                     ),

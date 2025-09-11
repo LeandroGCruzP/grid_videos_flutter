@@ -98,7 +98,7 @@ class SyncVideoBetterPlayerController {
 
   BetterPlayerConfiguration _createSyncVideoConfig() {
     return const BetterPlayerConfiguration(
-      aspectRatio: 16 / 9,
+      fit: BoxFit.contain,
       autoPlay: true,
       startAt: Duration.zero,
       handleLifecycle: false,

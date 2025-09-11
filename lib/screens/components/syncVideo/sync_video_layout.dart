@@ -473,13 +473,16 @@ class _SyncVideoLayoutState extends State<SyncVideoLayout> {
                       ) : const SizedBox.shrink(),
                     ),
                     // Main video area
-                    Expanded(
+                    Flexible(
                       flex: _showDock ? 3 : 4,
-                      child: ClipRRect(
-                        child: GestureDetector(
-                          onTap: _toggleDock,
-                          child: _buildOptimizedVideo(_mainVideoIndex,
-                              isMain: true),
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: Center(
+                          child: GestureDetector(
+                            onTap: _toggleDock,
+                            child: _buildOptimizedVideo(_mainVideoIndex,
+                                isMain: true),
+                          ),
                         ),
                       ),
                     ),
