@@ -450,6 +450,7 @@ class _SyncVideoLayoutState extends State<SyncVideoLayout> {
                         children: [
                           const ButtonGoBack(),
                           Container(
+                            margin: const EdgeInsets.only(top: 8),
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 10, vertical: 6),
                             decoration: BoxDecoration(

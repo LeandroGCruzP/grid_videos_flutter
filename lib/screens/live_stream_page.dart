@@ -35,7 +35,7 @@ class _LiveStreamPageState extends State<LiveStreamPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black, // Set background color
+      backgroundColor: const Color(0xFF484847),
       body: Padding(
         padding: const EdgeInsets.all(5.0),
         child: LiveStreamLayout(videoUrls: widget.urls),
