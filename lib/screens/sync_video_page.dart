@@ -35,7 +35,7 @@ class _SyncVideoPageState extends State<SyncVideoPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black, // Set background color
+      backgroundColor: const Color(0xFF484847),
       body: Padding(
         padding: const EdgeInsets.all(5.0),
         child: SyncVideoLayout(videoUrls: widget.urls),

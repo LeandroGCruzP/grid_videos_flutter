@@ -283,15 +283,14 @@ class _SyncDockState extends State<SyncDock> {
                     fontSize: 12,
                   ),
                 ),
-                const SizedBox(width: 8),
                 
                 // Progress slider
                 Expanded(
                   child: SliderTheme(
                     data: SliderTheme.of(context).copyWith(
-                      activeTrackColor: Colors.white,
-                      inactiveTrackColor: Colors.white.withOpacity(0.3),
-                      thumbColor: Colors.white,
+                      activeTrackColor: const Color.fromARGB(255, 246, 221, 140),
+                      inactiveTrackColor: Colors.white.withOpacity(0.9),
+                      thumbColor: const Color(0xFFFFC501),
                       thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
                       trackHeight: 4,
                     ),
@@ -309,7 +308,6 @@ class _SyncDockState extends State<SyncDock> {
                   ),
                 ),
                 
-                const SizedBox(width: 8),
                 // Time total
                 Text(
                   _formatDuration(_totalDuration),
@@ -333,10 +331,11 @@ class _SyncDockState extends State<SyncDock> {
                     final newPosition = _currentPosition - const Duration(seconds: 10);
                     _seekAll(newPosition.isNegative ? Duration.zero : newPosition);
                   },
+                  padding: EdgeInsets.zero,
                   icon: const Icon(
                     Icons.replay_10,
                     color: Colors.white,
-                    size: 28,
+                    size: 32,
                   ),
                 ),
                 
@@ -344,22 +343,24 @@ class _SyncDockState extends State<SyncDock> {
                 
                 // Play/Pause
                 Container(
-                  width: 56,
-                  height: 56,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                  width: 40,
+                  height: 40,
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
                     shape: BoxShape.circle,
                   ),
                   child: IconButton(
                     onPressed: _playPauseAll,
+                    alignment: Alignment.center,
+                    iconSize: 16,
                     icon: Icon(
                       _isPlaying ? Icons.pause : Icons.play_arrow,
-                      color: Colors.white,
-                      size: 32,
+                      color: const Color(0xFF484847),
+                      size: 16,
                     ),
                   ),
                 ),
-                
+
                 const SizedBox(width: 16),
                 
                 // Skip forward 10s
@@ -368,10 +369,11 @@ class _SyncDockState extends State<SyncDock> {
                     final newPosition = _currentPosition + const Duration(seconds: 10);
                     _seekAll(newPosition > _totalDuration ? _totalDuration : newPosition);
                   },
+                  padding: EdgeInsets.zero,
                   icon: const Icon(
                     Icons.forward_10,
                     color: Colors.white,
-                    size: 28,
+                    size: 32,
                   ),
                 ),
               ],

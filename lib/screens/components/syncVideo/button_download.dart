@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 
-class ButtonGoBack extends StatelessWidget {
-  const ButtonGoBack({super.key});
+class ButtonDownload extends StatelessWidget {
+  final VoidCallback? onPressed;  
 
-  void _onPressed(BuildContext context) {
-    Navigator.of(context).pop();
-  }
+  const ButtonDownload({super.key, required this.onPressed});
 
   @override
   Widget build(BuildContext context) {
@@ -18,9 +16,9 @@ class ButtonGoBack extends StatelessWidget {
         border: Border.all(color: const Color.fromARGB(31, 88, 88, 88), width: 1),
       ),
       child: IconButton(
-        onPressed: () => _onPressed(context),
+        onPressed: onPressed,
         icon: const Icon(
-          Icons.arrow_back,
+          Icons.download,
           color: Color(0xFF343432),
           size: 16,
         ),
