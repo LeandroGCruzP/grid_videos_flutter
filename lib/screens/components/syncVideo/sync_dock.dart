@@ -78,11 +78,12 @@ class _SyncDockState extends State<SyncDock> {
     _controllerMaster();
   }
 
-  void _seekAll(Duration position) {
+  void _seekAll(Duration position) async {
     for (var controller in widget.controllers.values) {
       try {
         if (controller.isReady) {
-          controller.controller.seekTo(position);
+          await controller.controller.seekTo(position);
+          controller.controller.play();
         }
       } catch (e) {
         debugPrint('❌ Error seeking controller: $e');
