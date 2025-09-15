@@ -1,5 +1,6 @@
 import 'package:better_player_plus/better_player_plus.dart';
 import 'package:flutter/material.dart';
+import 'package:multi_video/screens/components/button_change_channels.dart';
 import 'package:multi_video/screens/controllers/sync_video_better_player_controller.dart';
 
 class SyncDock extends StatefulWidget {
@@ -175,56 +176,66 @@ class _SyncDockState extends State<SyncDock> {
         ),
 
         // Controls row
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // Skip back 10s
-            IconButton(
-              onPressed: () => _changeTimePosition(_position.inSeconds - 10),
-              padding: EdgeInsets.zero,
-              icon: const Icon(
-                Icons.replay_10,
-                color: Colors.white,
-                size: 32,
-              ),
-            ),
-        
-            const SizedBox(width: 16),
-        
-            // Play/Pause
-            Container(
-              width: 33,
-              height: 33,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                shape: BoxShape.circle,
-                border: Border.all(
-                    color: const Color.fromARGB(31, 88, 88, 88), width: 1),
-              ),
-              child: IconButton(
-                onPressed: _togglePlay,
-                icon: Icon(
-                  _isPlaying ? Icons.pause : Icons.play_arrow,
-                  color: const Color(0xFF343432),
-                  size: 16,
+        SizedBox(
+          width: double.infinity,
+          child: Stack(
+            children: [
+              // Play/Pause and Seek buttons centered
+              Align(
+                alignment: Alignment.center,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      onPressed: () => _changeTimePosition(_position.inSeconds - 10),
+                      padding: EdgeInsets.zero,
+                      icon: const Icon(
+                        Icons.replay_10,
+                        color: Colors.white,
+                        size: 32,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Container(
+                      width: 33,
+                      height: 33,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                            color: const Color.fromARGB(31, 88, 88, 88), width: 1),
+                      ),
+                      child: IconButton(
+                        onPressed: _togglePlay,
+                        icon: Icon(
+                          _isPlaying ? Icons.pause : Icons.play_arrow,
+                          color: const Color(0xFF343432),
+                          size: 16,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    IconButton(
+                      onPressed: () => _changeTimePosition(_position.inSeconds + 10),
+                      padding: EdgeInsets.zero,
+                      icon: const Icon(
+                        Icons.forward_10,
+                        color: Colors.white,
+                        size: 32,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ),
-        
-            const SizedBox(width: 16),
-        
-            // Skip forward 10s
-            IconButton(
-              onPressed: () => _changeTimePosition(_position.inSeconds + 10),
-              padding: EdgeInsets.zero,
-              icon: const Icon(
-                Icons.forward_10,
-                color: Colors.white,
-                size: 32,
-              ),
-            ),
-          ],
-        ),
+
+              // Swap Channels button aligned to the right
+              Align(
+                alignment: Alignment.centerRight,
+                child: ButtonChangeChannels(onPressed: () {})
+              )
+            ],
+          ),
+        )
       ],
     );
   }
