@@ -3,9 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:multi_video/screens/components/syncVideo/sync_video_layout.dart';
 
 class SyncVideoPage extends StatefulWidget {
-  final List<String> urls;
+  final List<Map<String, dynamic>> videos;
 
-  const SyncVideoPage({super.key, required this.urls});
+  const SyncVideoPage({super.key, required this.videos});
 
   @override
   State<SyncVideoPage> createState() => _SyncVideoPageState();
@@ -38,7 +38,7 @@ class _SyncVideoPageState extends State<SyncVideoPage> {
       backgroundColor: const Color(0xFF484847),
       body: Padding(
         padding: const EdgeInsets.all(5.0),
-        child: SyncVideoLayout(videoUrls: widget.urls),
+        child: SyncVideoLayout(videos: widget.videos),
       ),
     );
   }

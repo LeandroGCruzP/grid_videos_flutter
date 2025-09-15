@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 
 class ButtonDownload extends StatelessWidget {
-  final VoidCallback? onPressed;  
+  const ButtonDownload({super.key});
 
-  const ButtonDownload({super.key, required this.onPressed});
+  void onDownload() {
+    debugPrint('Download button pressed');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -16,7 +18,7 @@ class ButtonDownload extends StatelessWidget {
         border: Border.all(color: const Color.fromARGB(31, 88, 88, 88), width: 1),
       ),
       child: IconButton(
-        onPressed: onPressed,
+        onPressed: onDownload,
         icon: const Icon(
           Icons.download,
           color: Color(0xFF343432),

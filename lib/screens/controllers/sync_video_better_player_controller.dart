@@ -37,7 +37,7 @@ class SyncVideoBetterPlayerController {
         );
 
         _controller!.setVolume(0.0);
-        _controller!.setControlsVisibility(false);
+        // _controller!.setControlsVisibility(false);
         
         // Start monitoring for early codec errors
         _startErrorMonitoring();
@@ -106,15 +106,16 @@ class SyncVideoBetterPlayerController {
       autoDetectFullscreenDeviceOrientation: false,
       deviceOrientationsAfterFullScreen: [],
       controlsConfiguration: BetterPlayerControlsConfiguration(
-        showControls: false,
+        // showControls: false,
+        // controlsHideTime: Duration(seconds: 10000),
         enableOverflowMenu: false,
         enablePlayPause: false,
         enableMute: false,
-        enableFullscreen: false,
+        enableFullscreen: true,
         enablePip: false,
         enablePlaybackSpeed: false,
-        enableProgressText: false,
-        enableProgressBar: false,
+        enableProgressText: true,
+        enableProgressBar: true,
         enableSkips: false,
         enableAudioTracks: false,
         enableSubtitles: false,

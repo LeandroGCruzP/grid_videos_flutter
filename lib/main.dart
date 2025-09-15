@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:multi_video/screens/pages/live_stream_page.dart';
 import 'package:multi_video/screens/pages/sync_video_page.dart';
 
 void main() {
@@ -18,26 +17,35 @@ void main() {
 class FirstRoute extends StatelessWidget {
   const FirstRoute({super.key});
 
-  final liveUrl = "https://live-hls-web-aje.getaj.net/AJE/01.m3u8";
-  
-  final videoUrl1 = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4";
-  final videoUrl2 = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
-  final videoUrl3 = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4";
-  final videoUrl4 = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4";
-  final videoUrl5 = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4";
-  final videoUrl6 = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4";
+  static List<Map<String, dynamic>> lives = [
+    { "channel": 1, "url": "https://live-hls-web-aje.getaj.net/AJE/01.m3u8"},
+    { "channel": 2, "url": "https://ireplay.tv/test/blender.m3u8"},
+    { "channel": 3, "url": "https://live-hls-web-aje.getaj.net/AJE/01.m3u8"},
+    { "channel": 4, "url": "https://live-hls-web-aje.getaj.net/AJE/01.m3u8"},
+    { "channel": 5, "url": "https://live-hls-web-aje.getaj.net/AJE/01.m3u8"},
+    { "channel": 6, "url": "https://live-hls-web-aje.getaj.net/AJE/01.m3u8"},
+  ];
 
-  void _openLives(BuildContext context, List<String> urls) {
+  static List<Map<String, dynamic>> videos = [
+    { "channel": 1, "url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4"},
+    { "channel": 2, "url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"},
+    { "channel": 3, "url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4"},
+    { "channel": 4, "url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4"},
+    { "channel": 5, "url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4"},
+    { "channel": 6, "url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4"},
+  ];
+
+  // void _openLives(BuildContext context, List<Map<String, dynamic>> lives) {
+  //   Navigator.push(
+  //     context,
+  //     MaterialPageRoute(builder: (context) => LiveStreamPage(urls: lives)),
+  //   );
+  // }
+
+  void _openSyncVideos(BuildContext context, List<Map<String, dynamic>> videos) {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => LiveStreamPage(urls: urls)),
-    );
-  }
-
-  void _openSyncVideos(BuildContext context, List<String> urls) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => SyncVideoPage(urls: urls)),
+      MaterialPageRoute(builder: (context) => SyncVideoPage(videos: videos)),
     );
   }
 
@@ -49,14 +57,14 @@ class FirstRoute extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              ElevatedButton(
-                child: const Text('Lives'), 
-                onPressed: () => _openLives(context, [liveUrl, liveUrl, liveUrl, liveUrl, liveUrl, liveUrl])
-              ),
-              const SizedBox(height: 20),
+              // ElevatedButton(
+              //   child: const Text('Lives'), 
+              //   onPressed: () => _openLives(context, FirstRoute.lives.map((live) => live['url'] as String).toList())
+              // ),
+              // const SizedBox(height: 20),
               ElevatedButton(
                 child: const Text('Videos'), 
-                onPressed: () => _openSyncVideos(context, [videoUrl1, videoUrl2, videoUrl3, videoUrl4, videoUrl5, videoUrl6])
+                onPressed: () => _openSyncVideos(context, FirstRoute.videos)
               ),
             ],
           ),
