@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
 class ChannelName extends StatelessWidget {
-  final int channelNumber;
+  final int channel;
 
-  const ChannelName({super.key, required this.channelNumber});
+  const ChannelName({super.key, required this.channel});
 
   @override
   Widget build(BuildContext context) {
@@ -17,7 +17,7 @@ class ChannelName extends StatelessWidget {
           borderRadius: BorderRadius.circular(35),
         ),
         child: Text(
-          'Canal $channelNumber',
+          'Canal $channel',
           style: const TextStyle(
             color: Color(0xFFFFC501),
             fontWeight: FontWeight.w500,

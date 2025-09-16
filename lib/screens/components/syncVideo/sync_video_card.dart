@@ -23,7 +23,7 @@ class SyncVideoCard extends StatelessWidget {
       child: Column(
         children: [
           // Channel name
-          ChannelName(channelNumber: channel),
+          ChannelName(channel: channel),
           // Video Player
           Flexible(
             child: Center(

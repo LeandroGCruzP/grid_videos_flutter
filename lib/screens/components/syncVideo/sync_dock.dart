@@ -1,6 +1,6 @@
 import 'package:better_player_plus/better_player_plus.dart';
 import 'package:flutter/material.dart';
-import 'package:multi_video/screens/components/button_change_channels.dart';
+import 'package:multi_video/screens/components/changeChannels/button_change_channels.dart';
 import 'package:multi_video/screens/controllers/sync_video_better_player_controller.dart';
 import 'package:multi_video/screens/controllers/sync_video_controller.dart';
 

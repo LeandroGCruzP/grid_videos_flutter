@@ -31,15 +31,25 @@ class _SyncVideoPageState extends State<SyncVideoPage> {
 
     _syncVideoController = SyncVideoController();
 
+    _syncVideoController.addListener(() {
+      debugPrint('🚀 Selected channels: ${_syncVideoController.selectedChannels}');
+      debugPrint('🚀 All channels: ${_syncVideoController.allChannelsKeys}');
+    });
+
     _initializeControllers();
   }
 
   Future<void> _initializeControllers() async {
+    for (final video in widget.videos) {
+      final channel = video["channel"];
+      _syncVideoController.addChannel(channel);
+    }
+
     for (int i = 0; i < widget.videos.length && i < maxChannelsToShow; i++) {
       final video = widget.videos[i];
-      final channel = video["channel"] as int;
-      _syncVideoBetterPlayerControllers[channel] = SyncVideoBetterPlayerController(video["url"]);
-      _syncVideoController.toggleChannel(channel.toString());
+      final channel = video["channel"];
+      _syncVideoBetterPlayerControllers[channel] = SyncVideoBetterPlayerController(video["url"]); // aqui não converte para string
+      _syncVideoController.toggleChannel(channel);
     }
   }
 
@@ -86,7 +96,7 @@ class _SyncVideoPageState extends State<SyncVideoPage> {
                       }
                 
                       final video = widget.videos[index];
-                      final channel = video["channel"] as int;
+                      final channel = video["channel"];
                       final syncVideoBetterPlayerController = _syncVideoBetterPlayerControllers[channel];
                 
                       return Expanded(
