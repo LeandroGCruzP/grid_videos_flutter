@@ -20,19 +20,32 @@ class _SyncDockState extends State<SyncDock> {
   BetterPlayerController? _masterController;
   bool _isPlaying = false;
 
-  void _controllerMaster() {
-    if (widget.syncVideoBetterPlayerControllers.isNotEmpty) {
-      try {
-        final firstController = widget.syncVideoBetterPlayerControllers.values.first;
-        if (firstController.isReady) {
-          _masterController = firstController.controller;
-          _masterController?.addEventsListener(_onPlayerEvent);
+void _controllerMaster() {
+  if (widget.syncVideoBetterPlayerControllers.isNotEmpty) {
+    try {
+      SyncVideoBetterPlayerController? masterCandidate;
+      Duration maxDuration = Duration.zero;
+      
+      for (var syncCtrl in widget.syncVideoBetterPlayerControllers.values) {
+        if (syncCtrl.isReady) {
+          final controllerDuration =
+              syncCtrl.controller.videoPlayerController?.value.duration ?? Duration.zero;
+          if (controllerDuration > maxDuration) {
+            maxDuration = controllerDuration;
+            masterCandidate = syncCtrl;
+          }
         }
-      } catch (e) {
-        debugPrint('❌ Error setting up master controller: $e');
       }
+      
+      if (masterCandidate != null) {
+        _masterController = masterCandidate.controller;
+        _masterController?.addEventsListener(_onPlayerEvent);
+      }
+    } catch (e) {
+      debugPrint('❌ Error setting up master controller: $e');
     }
   }
+}
 
   void _onPlayerEvent(BetterPlayerEvent event) {
     if (!mounted) return;
@@ -62,8 +75,10 @@ class _SyncDockState extends State<SyncDock> {
         Future.delayed(const Duration(milliseconds: 100), () {
           if (mounted && _masterController != null) {
             final isPlaying = _masterController!.isPlaying() ?? false;
+            final totalDuration = _masterController!.videoPlayerController?.value.duration ?? Duration.zero;
             setState(() {
               _isPlaying = isPlaying;
+              _total = totalDuration;
             });
             debugPrint('📱 Initial play state after init: $isPlaying');
           }
@@ -78,7 +93,10 @@ class _SyncDockState extends State<SyncDock> {
   @override
   void initState() {
     super.initState();
-    _controllerMaster();
+    // Delay to set up master controller after all videos are likely initialized
+    Future.delayed(const Duration(seconds: 1), () {
+      _controllerMaster();
+    });
   }
 
   void _seekAll(Duration position) async {
