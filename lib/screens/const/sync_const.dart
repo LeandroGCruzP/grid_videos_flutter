@@ -1,0 +1,1 @@
+const int maxChannelsToShow = 3;

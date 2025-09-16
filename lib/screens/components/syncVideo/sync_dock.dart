@@ -2,11 +2,13 @@ import 'package:better_player_plus/better_player_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:multi_video/screens/components/button_change_channels.dart';
 import 'package:multi_video/screens/controllers/sync_video_better_player_controller.dart';
+import 'package:multi_video/screens/controllers/sync_video_controller.dart';
 
 class SyncDock extends StatefulWidget {
-  final Map<int, SyncVideoBetterPlayerController> controllers;
+  final Map<int, SyncVideoBetterPlayerController> syncVideoBetterPlayerControllers;
+  final SyncVideoController syncController;
 
-  const SyncDock({super.key, required this.controllers});
+  const SyncDock({super.key, required this.syncVideoBetterPlayerControllers, required this.syncController});
 
   @override
   State<SyncDock> createState() => _SyncDockState();
@@ -19,9 +21,9 @@ class _SyncDockState extends State<SyncDock> {
   bool _isPlaying = false;
 
   void _controllerMaster() {
-    if (widget.controllers.isNotEmpty) {
+    if (widget.syncVideoBetterPlayerControllers.isNotEmpty) {
       try {
-        final firstController = widget.controllers.values.first;
+        final firstController = widget.syncVideoBetterPlayerControllers.values.first;
         if (firstController.isReady) {
           _masterController = firstController.controller;
           _masterController?.addEventsListener(_onPlayerEvent);
@@ -42,19 +44,19 @@ class _SyncDockState extends State<SyncDock> {
           _total = event.parameters?["duration"] ?? Duration.zero;
         });
         break;
-      
+
       case BetterPlayerEventType.play:
         setState(() {
           _isPlaying = true;
         });
         break;
-      
+
       case BetterPlayerEventType.pause:
         setState(() {
           _isPlaying = false;
         });
         break;
-      
+
       case BetterPlayerEventType.initialized:
         // Check initial play state after initialization
         Future.delayed(const Duration(milliseconds: 100), () {
@@ -67,7 +69,7 @@ class _SyncDockState extends State<SyncDock> {
           }
         });
         break;
-      
+
       default:
         break;
     }
@@ -80,11 +82,11 @@ class _SyncDockState extends State<SyncDock> {
   }
 
   void _seekAll(Duration position) async {
-    for (var controller in widget.controllers.values) {
+    for (var syncVideoBetterPlayerController in widget.syncVideoBetterPlayerControllers.values) {
       try {
-        if (controller.isReady) {
-          await controller.controller.seekTo(position);
-          controller.controller.play();
+        if (syncVideoBetterPlayerController.isReady) {
+          await syncVideoBetterPlayerController.controller.seekTo(position);
+          syncVideoBetterPlayerController.controller.play();
         }
       } catch (e) {
         debugPrint('❌ Error seeking controller: $e');
@@ -99,20 +101,20 @@ class _SyncDockState extends State<SyncDock> {
 
   void _togglePlay() {
     if (_isPlaying) {
-      for (var controller in widget.controllers.values) {
+      for (var syncVideoBetterPlayerController in widget.syncVideoBetterPlayerControllers.values) {
         try {
-          if (controller.isReady) {
-            controller.controller.pause();
+          if (syncVideoBetterPlayerController.isReady) {
+            syncVideoBetterPlayerController.controller.pause();
           }
         } catch (e) {
           debugPrint('❌ Error pausing controller: $e');
         }
       }
     } else {
-      for (var controller in widget.controllers.values) {
+      for (var syncVideoBetterPlayerController in widget.syncVideoBetterPlayerControllers.values) {
         try {
-          if (controller.isReady) {
-            controller.controller.play();
+          if (syncVideoBetterPlayerController.isReady) {
+            syncVideoBetterPlayerController.controller.play();
           }
         } catch (e) {
           debugPrint('❌ Error playing controller: $e');
@@ -128,7 +130,7 @@ class _SyncDockState extends State<SyncDock> {
   @override
   void dispose() {
     _masterController?.removeEventsListener(_onPlayerEvent);
-    // Don't dispose controllers here - they're managed by SyncVideoLayout
+    // Don't dispose controllers here - they're managed by SyncVideoPage
     super.dispose();
   }
 
@@ -187,7 +189,8 @@ class _SyncDockState extends State<SyncDock> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     IconButton(
-                      onPressed: () => _changeTimePosition(_position.inSeconds - 10),
+                      onPressed: () =>
+                          _changeTimePosition(_position.inSeconds - 10),
                       padding: EdgeInsets.zero,
                       icon: const Icon(
                         Icons.replay_10,
@@ -203,7 +206,8 @@ class _SyncDockState extends State<SyncDock> {
                         color: Colors.white,
                         shape: BoxShape.circle,
                         border: Border.all(
-                            color: const Color.fromARGB(31, 88, 88, 88), width: 1),
+                            color: const Color.fromARGB(31, 88, 88, 88),
+                            width: 1),
                       ),
                       child: IconButton(
                         onPressed: _togglePlay,
@@ -216,7 +220,8 @@ class _SyncDockState extends State<SyncDock> {
                     ),
                     const SizedBox(width: 16),
                     IconButton(
-                      onPressed: () => _changeTimePosition(_position.inSeconds + 10),
+                      onPressed: () =>
+                          _changeTimePosition(_position.inSeconds + 10),
                       padding: EdgeInsets.zero,
                       icon: const Icon(
                         Icons.forward_10,
@@ -230,9 +235,10 @@ class _SyncDockState extends State<SyncDock> {
 
               // Swap Channels button aligned to the right
               Align(
-                alignment: Alignment.centerRight,
-                child: ButtonChangeChannels(onPressed: () {})
-              )
+                  alignment: Alignment.centerRight,
+                  child: ButtonChangeChannels(
+                    syncController: widget.syncController,
+                  ))
             ],
           ),
         )

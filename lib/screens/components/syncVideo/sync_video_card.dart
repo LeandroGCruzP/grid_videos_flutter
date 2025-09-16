@@ -5,15 +5,15 @@ import 'package:multi_video/screens/components/loading_video.dart';
 import 'package:multi_video/screens/controllers/sync_video_better_player_controller.dart';
 
 class SyncVideoCard extends StatelessWidget {
-  final int chanel;
-  final SyncVideoBetterPlayerController controller;
+  final int channel;
+  final SyncVideoBetterPlayerController syncVideoBetterPlayerController;
   final VoidCallback onTap;
 
-  const SyncVideoCard({super.key, required this.controller, required this.onTap, required this.chanel});
+  const SyncVideoCard({super.key, required this.syncVideoBetterPlayerController, required this.onTap, required this.channel});
 
   @override
   Widget build(BuildContext context) {
-    final isReady = controller.isReady;
+    final isReady = syncVideoBetterPlayerController.isReady;
 
     return Container(
       width: double.infinity,
@@ -23,7 +23,7 @@ class SyncVideoCard extends StatelessWidget {
       child: Column(
         children: [
           // Channel name
-          ChannelName(channelNumber: chanel),
+          ChannelName(channelNumber: channel),
           // Video Player
           Flexible(
             child: Center(
@@ -31,7 +31,7 @@ class SyncVideoCard extends StatelessWidget {
                 onTap: onTap, 
                 child: !isReady
                   ? const LoadingVideo()
-                  : BetterPlayer(controller: controller.controller),
+                  : BetterPlayer(controller: syncVideoBetterPlayerController.controller),
               )
             ),
           ),
