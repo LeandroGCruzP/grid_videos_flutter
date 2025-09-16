@@ -20,32 +20,33 @@ class _SyncDockState extends State<SyncDock> {
   BetterPlayerController? _masterController;
   bool _isPlaying = false;
 
-void _controllerMaster() {
-  if (widget.syncVideoBetterPlayerControllers.isNotEmpty) {
-    try {
-      SyncVideoBetterPlayerController? masterCandidate;
-      Duration maxDuration = Duration.zero;
-      
-      for (var syncCtrl in widget.syncVideoBetterPlayerControllers.values) {
-        if (syncCtrl.isReady) {
-          final controllerDuration =
-              syncCtrl.controller.videoPlayerController?.value.duration ?? Duration.zero;
-          if (controllerDuration > maxDuration) {
-            maxDuration = controllerDuration;
-            masterCandidate = syncCtrl;
+  void _controllerMaster() {
+    if (widget.syncVideoBetterPlayerControllers.isNotEmpty) {
+      try {
+        SyncVideoBetterPlayerController? masterCandidate;
+        Duration maxDuration = Duration.zero;
+
+        for (var syncVideoBetterPlayerController in widget.syncVideoBetterPlayerControllers.values) {
+          if (syncVideoBetterPlayerController.isReady) {
+            final controllerDuration =
+                syncVideoBetterPlayerController.controller.videoPlayerController?.value.duration ??
+                    Duration.zero;
+            if (controllerDuration > maxDuration) {
+              maxDuration = controllerDuration;
+              masterCandidate = syncVideoBetterPlayerController;
+            }
           }
         }
+
+        if (masterCandidate != null) {
+          _masterController = masterCandidate.controller;
+          _masterController?.addEventsListener(_onPlayerEvent);
+        }
+      } catch (e) {
+        debugPrint('❌ Error setting up master controller: $e');
       }
-      
-      if (masterCandidate != null) {
-        _masterController = masterCandidate.controller;
-        _masterController?.addEventsListener(_onPlayerEvent);
-      }
-    } catch (e) {
-      debugPrint('❌ Error setting up master controller: $e');
     }
   }
-}
 
   void _onPlayerEvent(BetterPlayerEvent event) {
     if (!mounted) return;
@@ -54,8 +55,22 @@ void _controllerMaster() {
       case BetterPlayerEventType.progress:
         setState(() {
           _position = event.parameters?["progress"] ?? Duration.zero;
-          _total = event.parameters?["duration"] ?? Duration.zero;
         });
+
+        final newDuration = event.parameters?["duration"] ?? Duration.zero;
+        if (newDuration != _total) {
+          setState(() {
+            _total = newDuration;
+          });
+        }
+
+        final isPlaying = _masterController?.isPlaying() ?? false;
+        if (isPlaying != _isPlaying) {
+          setState(() {
+            _isPlaying = isPlaying;
+          });
+        }
+
         break;
 
       case BetterPlayerEventType.play:
@@ -70,18 +85,9 @@ void _controllerMaster() {
         });
         break;
 
-      case BetterPlayerEventType.initialized:
-        // Check initial play state after initialization
-        Future.delayed(const Duration(milliseconds: 100), () {
-          if (mounted && _masterController != null) {
-            final isPlaying = _masterController!.isPlaying() ?? false;
-            final totalDuration = _masterController!.videoPlayerController?.value.duration ?? Duration.zero;
-            setState(() {
-              _isPlaying = isPlaying;
-              _total = totalDuration;
-            });
-            debugPrint('📱 Initial play state after init: $isPlaying');
-          }
+      case BetterPlayerEventType.finished:
+        setState(() {
+          _isPlaying = false;
         });
         break;
 
@@ -94,7 +100,7 @@ void _controllerMaster() {
   void initState() {
     super.initState();
     // Delay to set up master controller after all videos are likely initialized
-    Future.delayed(const Duration(seconds: 1), () {
+    Future.delayed(const Duration(seconds: 2), () {
       _controllerMaster();
     });
   }
@@ -178,7 +184,11 @@ void _controllerMaster() {
                   trackHeight: 4,
                 ),
                 child: Slider(
-                  value: _position.inSeconds.toDouble(),
+                  value: _total.inSeconds > 0
+                      ? _position.inSeconds
+                          .toDouble()
+                          .clamp(0.0, _total.inSeconds.toDouble())
+                      : 0.0,
                   max: _total.inSeconds > 0 ? _total.inSeconds.toDouble() : 1,
                   onChanged: (value) => _changeTimePosition(value.toInt()),
                 ),
