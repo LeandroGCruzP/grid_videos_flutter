@@ -9,13 +9,16 @@ class SyncController extends ChangeNotifier {
   final List<int> _selectedChannels = [];
   final List<int> _allChannelsKeys = [];
   final Map<int, String> _channelUrls = {};
+  int? _fullscreenChannel;
 
   ControllerFactory? _controllerFactory;
   ControllerDisposer? _controllerDisposer;
 
   List<int> get selectedChannels => List.from(_selectedChannels);
   List<int> get allChannelsKeys => List.from(_allChannelsKeys);
+  int? get fullscreenChannel => _fullscreenChannel;
   bool isChannelSelected(int channel) => _selectedChannels.contains(channel);
+  bool get isFullscreen => _fullscreenChannel != null;
 
   void setControllerCallbacks(ControllerFactory factory, ControllerDisposer disposer) {
     _controllerFactory = factory;
@@ -51,5 +54,38 @@ class SyncController extends ChangeNotifier {
       _channelUrls[channel] = url;
       notifyListeners();
     }
+  }
+
+  void setFullscreenChannel(int channel) {
+    if (_selectedChannels.contains(channel)) {
+      _fullscreenChannel = channel;
+      debugPrint('📺 Setting fullscreen channel: $channel');
+      notifyListeners();
+    }
+  }
+
+  void exitFullscreen() {
+    if (_fullscreenChannel != null) {
+      debugPrint('↩️ Exiting fullscreen mode');
+      _fullscreenChannel = null;
+      notifyListeners();
+    }
+  }
+
+  void toggleFullscreen(int channel) {
+    if (_fullscreenChannel == channel) {
+      exitFullscreen();
+    } else {
+      setFullscreenChannel(channel);
+    }
+  }
+
+  @override
+  void dispose() {
+    _selectedChannels.clear();
+    _allChannelsKeys.clear();
+    _channelUrls.clear();
+    _fullscreenChannel = null;
+    super.dispose();
   }
 }

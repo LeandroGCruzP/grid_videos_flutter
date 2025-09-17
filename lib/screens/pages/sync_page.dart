@@ -118,6 +118,44 @@ class _SyncPageState extends State<SyncPage> {
     super.dispose();
   }
 
+  Widget _buildGridView() {
+    return Row(
+      children: _syncController.selectedChannels.asMap().entries.map((entry) {
+        final index = entry.key;
+        final channel = entry.value;
+        final syncVideoBetterPlayerController = _syncBPControllers[channel];
+        return Expanded(
+          child: Padding(
+            padding: EdgeInsets.only(right: index < _syncController.selectedChannels.length - 1 ? 4.0 : 0),
+            child: syncVideoBetterPlayerController != null
+                ? SyncCard(
+                    key: ValueKey(channel),
+                    syncBPController: syncVideoBetterPlayerController,
+                    channel: channel,
+                    onTap: () => _syncController.toggleFullscreen(channel),
+                  )
+                : const SizedBox.shrink(),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildFullscreenView() {
+    final fullscreenChannel = _syncController.fullscreenChannel;
+    if (fullscreenChannel == null) return const SizedBox.shrink();
+
+    final syncVideoBetterPlayerController = _syncBPControllers[fullscreenChannel];
+    if (syncVideoBetterPlayerController == null) return const SizedBox.shrink();
+
+    return SyncCard(
+      key: ValueKey('fullscreen_$fullscreenChannel'),
+      syncBPController: syncVideoBetterPlayerController,
+      channel: fullscreenChannel,
+      onTap: () => _syncController.exitFullscreen(),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (widget.videos.isEmpty) {
@@ -136,26 +174,10 @@ class _SyncPageState extends State<SyncPage> {
                 Expanded(
                   child: Stack(
                     children: [
-                      Row(
-                        children: _syncController.selectedChannels.asMap().entries.map((entry) {
-                          final index = entry.key;
-                          final channel = entry.value;
-                          final syncVideoBetterPlayerController = _syncBPControllers[channel];
-                          return Expanded(
-                            child: Padding(
-                              padding: EdgeInsets.only(right: index < _syncController.selectedChannels.length - 1 ? 4.0 : 0),
-                              child: syncVideoBetterPlayerController != null
-                                  ? SyncCard(
-                                      key: ValueKey(channel),
-                                      syncBPController: syncVideoBetterPlayerController,
-                                      channel: channel,
-                                      onTap: () {},
-                                    )
-                                  : const SizedBox.shrink(),
-                            ),
-                          );
-                        }).toList(),
-                      ),
+                      // Video display area
+                      _syncController.isFullscreen
+                          ? _buildFullscreenView()
+                          : _buildGridView(),
                       // Header
                       const Positioned(
                         top: 0,

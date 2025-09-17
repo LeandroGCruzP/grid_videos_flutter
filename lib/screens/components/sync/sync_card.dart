@@ -24,6 +24,7 @@ class SyncCard extends StatelessWidget {
         children: [
           // Channel name
           ChannelName(channel: channel),
+          const SizedBox(height: 4),
           // Video Player
           Flexible(
             child: Center(
