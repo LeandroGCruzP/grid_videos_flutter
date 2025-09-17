@@ -1,0 +1,1 @@
+const int maxLiveChannelsToShow = 3;

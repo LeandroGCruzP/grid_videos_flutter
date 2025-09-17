@@ -35,25 +35,17 @@ class LiveStreamBetterPlayerController {
           config,
           betterPlayerDataSource: dataSource,
         );
-        
+
         // Configure controller for live stream
-        Timer(const Duration(milliseconds: 100), () {
-          if (!_isDisposed && _controller != null) {
-            try {
-              _controller!.setControlsEnabled(false);
-              _controller!.play();
-            } catch (e) {
-              debugPrint('Error configuring controller: $e');
-            }
-          }
-        });
+        _controller!.setControlsEnabled(false);
+        _controller!.play();
         
         // Start monitoring for early codec errors
         _startErrorMonitoring();
       }
       
     } catch (e) {
-      debugPrint('Controller initialization failed: $e');
+      debugPrint('❌ Controller initialization failed: $e');
       if (!_isDisposed) {
         _hasInitializationError = true;
       }
@@ -71,7 +63,7 @@ class LiveStreamBetterPlayerController {
       try {
         // Simple check - if controller becomes null, it's likely an error
         if (_controller == null) {
-          debugPrint('Controller became null - possible initialization failure');
+          debugPrint('❌ Controller became null - possible initialization failure');
           _hasInitializationError = true;
           timer.cancel();
           return;
@@ -84,20 +76,20 @@ class LiveStreamBetterPlayerController {
           
           // Stop monitoring after reasonable time if no errors
           if (timer.tick > 8) { // 4 seconds (500ms * 8)
-            debugPrint('Video monitoring completed - no errors detected');
+            debugPrint('✅ Video monitoring completed - no errors detected');
             timer.cancel();
             return;
           }
         } catch (controllerError) {
           // If accessing basic properties fails, likely a codec/initialization error
-          debugPrint('Controller access failed - codec error likely: $controllerError');
+          debugPrint('❌ Controller access failed - codec error likely: $controllerError');
           _hasInitializationError = true;
           timer.cancel();
           return;
         }
         
       } catch (e) {
-        debugPrint('Error during monitoring: $e');
+        debugPrint('❌ Error during monitoring: $e');
         _hasInitializationError = true;
         timer.cancel();
       }
@@ -106,6 +98,7 @@ class LiveStreamBetterPlayerController {
 
   BetterPlayerConfiguration _createLiveStreamConfig() {
     return BetterPlayerConfiguration(
+      autoDispose: false,
       fit: BoxFit.contain,
       autoPlay: true,
       handleLifecycle: false,
@@ -167,19 +160,31 @@ class LiveStreamBetterPlayerController {
 
   void dispose() {
     if (_isDisposed) return;
-    
+
     _isDisposed = true;
+
+    // Cancel monitoring timer first
     _errorCheckTimer?.cancel();
-    
+    _errorCheckTimer = null;
+
     if (_controller != null) {
-      Timer(const Duration(milliseconds: 100), () {
-        try {
-          _controller?.dispose();
-        } catch (e) {
-          // Ignore dispose errors
-        }
+      try {
+        // Stop playback to release network resources
+        _controller?.pause();
+
+        // Clear cache to free memory
+        _controller?.clearCache();
+
+        // Dispose controller (we have full control with autoDispose: false)
+        _controller?.dispose();
+
+        debugPrint('✅ LiveStream BetterPlayer controller disposed successfully');
+      } catch (e) {
+        debugPrint('❌ Error disposing LiveStream BetterPlayer controller: $e');
+      } finally {
+        // Always clear reference
         _controller = null;
-      });
+      }
     }
   }
 }

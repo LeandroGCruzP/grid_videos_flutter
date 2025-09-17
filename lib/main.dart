@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:multi_video/screens/pages/live_stream_page.dart';
 import 'package:multi_video/screens/pages/sync_video_page.dart';
 
 void main() {
@@ -19,7 +20,7 @@ class FirstRoute extends StatelessWidget {
 
   static List<Map<String, dynamic>> lives = [
     { "channel": 1, "url": "https://live-hls-web-aje.getaj.net/AJE/01.m3u8"},
-    { "channel": 2, "url": "https://ireplay.tv/test/blender.m3u8"},
+    { "channel": 2, "url": "https://live-hls-web-aje.getaj.net/AJE/01.m3u8"},
     { "channel": 3, "url": "https://live-hls-web-aje.getaj.net/AJE/01.m3u8"},
     { "channel": 4, "url": "https://live-hls-web-aje.getaj.net/AJE/01.m3u8"},
     { "channel": 5, "url": "https://live-hls-web-aje.getaj.net/AJE/01.m3u8"},
@@ -35,12 +36,12 @@ class FirstRoute extends StatelessWidget {
     { "channel": 6, "url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4"},
   ];
 
-  // void _openLives(BuildContext context, List<Map<String, dynamic>> lives) {
-  //   Navigator.push(
-  //     context,
-  //     MaterialPageRoute(builder: (context) => LiveStreamPage(urls: lives)),
-  //   );
-  // }
+  void _openLives(BuildContext context, List<Map<String, dynamic>> lives) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => LiveStreamPage(lives: lives)),
+    );
+  }
 
   void _openSyncVideos(BuildContext context, List<Map<String, dynamic>> videos) {
     Navigator.push(
@@ -57,11 +58,11 @@ class FirstRoute extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // ElevatedButton(
-              //   child: const Text('Lives'), 
-              //   onPressed: () => _openLives(context, FirstRoute.lives.map((live) => live['url'] as String).toList())
-              // ),
-              // const SizedBox(height: 20),
+              ElevatedButton(
+                child: const Text('Lives'), 
+                onPressed: () => _openLives(context, FirstRoute.lives)
+              ),
+              const SizedBox(height: 20),
               ElevatedButton(
                 child: const Text('Videos'), 
                 onPressed: () => _openSyncVideos(context, FirstRoute.videos)

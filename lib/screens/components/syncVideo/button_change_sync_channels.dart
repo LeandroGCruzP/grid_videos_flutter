@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:multi_video/screens/components/changeChannels/channel_option.dart';
+import 'package:multi_video/screens/components/channel_option.dart';
 import 'package:multi_video/screens/const/sync_const.dart';
 import 'package:multi_video/screens/controllers/sync_video_controller.dart';
 
-class ButtonChangeChannels extends StatelessWidget {
+class ButtonChangeSyncChannels extends StatelessWidget {
   final SyncVideoController syncController;
 
-  const ButtonChangeChannels({
+  const ButtonChangeSyncChannels({
     super.key,
     required this.syncController,
   });

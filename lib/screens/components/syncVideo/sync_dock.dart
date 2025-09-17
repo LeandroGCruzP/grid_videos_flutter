@@ -1,6 +1,6 @@
 import 'package:better_player_plus/better_player_plus.dart';
 import 'package:flutter/material.dart';
-import 'package:multi_video/screens/components/changeChannels/button_change_channels.dart';
+import 'package:multi_video/screens/components/syncVideo/button_change_sync_channels.dart';
 import 'package:multi_video/screens/controllers/sync_video_better_player_controller.dart';
 import 'package:multi_video/screens/controllers/sync_video_controller.dart';
 
@@ -261,7 +261,7 @@ class _SyncDockState extends State<SyncDock> {
                 alignment: Alignment.centerRight,
                 child: ListenableBuilder(
                   listenable: widget.syncController,
-                  builder: (context, child) => ButtonChangeChannels(
+                  builder: (context, child) => ButtonChangeSyncChannels(
                     syncController: widget.syncController,
                   ),
                 ),
