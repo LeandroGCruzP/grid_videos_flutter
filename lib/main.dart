@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:multi_video/screens/pages/live_stream_page.dart';
-import 'package:multi_video/screens/pages/sync_video_page.dart';
+import 'package:multi_video/screens/pages/live_page.dart';
+import 'package:multi_video/screens/pages/sync_page.dart';
 
 void main() {
   // Global error handler to prevent crashes
@@ -39,14 +39,14 @@ class FirstRoute extends StatelessWidget {
   void _openLives(BuildContext context, List<Map<String, dynamic>> lives) {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => LiveStreamPage(lives: lives)),
+      MaterialPageRoute(builder: (context) => LivePage(lives: lives)),
     );
   }
 
   void _openSyncVideos(BuildContext context, List<Map<String, dynamic>> videos) {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => SyncVideoPage(videos: videos)),
+      MaterialPageRoute(builder: (context) => SyncPage(videos: videos)),
     );
   }
 

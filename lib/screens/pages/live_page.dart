@@ -1,24 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:multi_video/screens/components/button_go_back.dart';
-import 'package:multi_video/screens/components/liveStream/button_change_live_channels.dart';
-import 'package:multi_video/screens/components/liveStream/live_card.dart';
+import 'package:multi_video/screens/components/live/button_change_live_channels.dart';
+import 'package:multi_video/screens/components/live/live_card.dart';
 import 'package:multi_video/screens/const/live_const.dart';
+import 'package:multi_video/screens/controllers/live_bp_controller.dart';
 import 'package:multi_video/screens/controllers/live_controller.dart';
-import 'package:multi_video/screens/controllers/live_stream_better_player_controller.dart';
 
-class LiveStreamPage extends StatefulWidget {
+class LivePage extends StatefulWidget {
   final List<Map<String, dynamic>> lives;
 
-  const LiveStreamPage({super.key, required this.lives});
+  const LivePage({super.key, required this.lives});
 
   @override
-  State<LiveStreamPage> createState() => _LiveStreamPageState();
+  State<LivePage> createState() => _LivePageState();
 }
 
-class _LiveStreamPageState extends State<LiveStreamPage> {
+class _LivePageState extends State<LivePage> {
   late LiveController _liveController;
-  final Map<int, LiveStreamBetterPlayerController> _liveStreamBetterPlayerControllers = {};
+  final Map<int, LiveBPController> _liveBPControllers = {};
 
   @override
   void initState() {
@@ -58,15 +58,15 @@ class _LiveStreamPageState extends State<LiveStreamPage> {
     }
   }
 
-  LiveStreamBetterPlayerController _createController(int channel, String url) {
+  LiveBPController _createController(int channel, String url) {
     // debugPrint('✅ Creating controller for channel $channel with URL: $url');
-    final controller = LiveStreamBetterPlayerController(url);
-    _liveStreamBetterPlayerControllers[channel] = controller;
+    final controller = LiveBPController(url);
+    _liveBPControllers[channel] = controller;
     return controller;
   }
 
   void _disposeController(int channel) {
-    final controller = _liveStreamBetterPlayerControllers.remove(channel);
+    final controller = _liveBPControllers.remove(channel);
 
     if (controller != null) {
       try {
@@ -83,9 +83,9 @@ class _LiveStreamPageState extends State<LiveStreamPage> {
     debugPrint('🔄 Disposing LivePage...');
 
     // Step 1: Dispose all video controllers first to free resources
-    final controllerKeys = _liveStreamBetterPlayerControllers.keys.toList();
+    final controllerKeys = _liveBPControllers.keys.toList();
     for (final channel in controllerKeys) {
-      final controller = _liveStreamBetterPlayerControllers[channel];
+      final controller = _liveBPControllers[channel];
       if (controller != null) {
         try {
           controller.dispose();
@@ -95,7 +95,7 @@ class _LiveStreamPageState extends State<LiveStreamPage> {
         }
       }
     }
-    _liveStreamBetterPlayerControllers.clear();
+    _liveBPControllers.clear();
 
     // Step 2: Dispose live stream controller
     try {
@@ -140,7 +140,7 @@ class _LiveStreamPageState extends State<LiveStreamPage> {
                         children: _liveController.selectedChannels.asMap().entries.map((entry) {
                           final index = entry.key;
                           final channel = entry.value;
-                          final liveStreamBetterPlayerController = _liveStreamBetterPlayerControllers[channel];
+                          final liveStreamBetterPlayerController = _liveBPControllers[channel];
                           return Expanded(
                             child: Padding(
                               padding: EdgeInsets.only(right: index < _liveController.selectedChannels.length - 1 ? 4.0 : 0),
@@ -150,7 +150,7 @@ class _LiveStreamPageState extends State<LiveStreamPage> {
                                       channel: channel,
                                       // videoUrl: _liveController.getChannelUrl(channel) ?? '',
                                       // onTap: () {},
-                                      liveStreamBetterPlayerController: liveStreamBetterPlayerController,
+                                      liveBPController: liveStreamBetterPlayerController,
                                     )
                                   : const SizedBox.shrink(),
                             ),

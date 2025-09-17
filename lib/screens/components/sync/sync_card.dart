@@ -2,17 +2,18 @@ import 'package:better_player_plus/better_player_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:multi_video/screens/components/channel_name.dart';
 import 'package:multi_video/screens/components/loading_video.dart';
-import 'package:multi_video/screens/controllers/live_stream_better_player_controller.dart';
+import 'package:multi_video/screens/controllers/sync_bp_controller.dart';
 
-class LiveCard extends StatelessWidget {
+class SyncCard extends StatelessWidget {
   final int channel;
-  final LiveStreamBetterPlayerController liveStreamBetterPlayerController;
+  final SyncBPController syncBPController;
+  final VoidCallback onTap;
 
-  const LiveCard({super.key, required this.liveStreamBetterPlayerController, required this.channel});
+  const SyncCard({super.key, required this.syncBPController, required this.onTap, required this.channel});
 
   @override
   Widget build(BuildContext context) {
-    final isReady = liveStreamBetterPlayerController.isReady;
+    final isReady = syncBPController.isReady;
 
     return Container(
       width: double.infinity,
@@ -26,9 +27,12 @@ class LiveCard extends StatelessWidget {
           // Video Player
           Flexible(
             child: Center(
-              child: !isReady
-                ? const LoadingVideo()
-                : BetterPlayer(controller: liveStreamBetterPlayerController.controller)
+              child: GestureDetector(
+                onTap: onTap, 
+                child: !isReady
+                  ? const LoadingVideo()
+                  : BetterPlayer(controller: syncBPController.controller),
+              )
             ),
           ),
         ],

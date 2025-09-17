@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:multi_video/screens/const/sync_const.dart';
-import 'package:multi_video/screens/controllers/live_stream_better_player_controller.dart';
+import 'package:multi_video/screens/controllers/live_bp_controller.dart';
 
-typedef ControllerFactory = LiveStreamBetterPlayerController Function(int channel, String url);
+typedef ControllerFactory = LiveBPController Function(int channel, String url);
 typedef ControllerDisposer = void Function(int channel);
 
 class LiveController extends ChangeNotifier {
@@ -33,7 +33,7 @@ class LiveController extends ChangeNotifier {
           _controllerDisposer!(channel);
         });
       }
-    } else if (_selectedChannels.length < maxChannelsToShow) {
+    } else if (_selectedChannels.length < maxSyncChannelsToShow) {
       _selectedChannels.add(channel);
       notifyListeners();
 
@@ -42,7 +42,7 @@ class LiveController extends ChangeNotifier {
         _controllerFactory!(channel, url);
       }
     } else {
-      debugPrint('❌ Limite de canais atingido: $maxChannelsToShow');
+      debugPrint('❌ Limite de canais atingido: $maxSyncChannelsToShow');
     }
   }
 

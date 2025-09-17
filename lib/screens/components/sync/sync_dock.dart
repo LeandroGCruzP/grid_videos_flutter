@@ -1,14 +1,14 @@
 import 'package:better_player_plus/better_player_plus.dart';
 import 'package:flutter/material.dart';
-import 'package:multi_video/screens/components/syncVideo/button_change_sync_channels.dart';
-import 'package:multi_video/screens/controllers/sync_video_better_player_controller.dart';
-import 'package:multi_video/screens/controllers/sync_video_controller.dart';
+import 'package:multi_video/screens/components/sync/button_change_sync_channels.dart';
+import 'package:multi_video/screens/controllers/sync_bp_controller.dart';
+import 'package:multi_video/screens/controllers/sync_controller.dart';
 
 class SyncDock extends StatefulWidget {
-  final Map<int, SyncVideoBetterPlayerController> syncVideoBetterPlayerControllers;
-  final SyncVideoController syncController;
+  final Map<int, SyncBPController> syncBPControllers;
+  final SyncController syncController;
 
-  const SyncDock({super.key, required this.syncVideoBetterPlayerControllers, required this.syncController});
+  const SyncDock({super.key, required this.syncBPControllers, required this.syncController});
 
   @override
   State<SyncDock> createState() => _SyncDockState();
@@ -21,19 +21,19 @@ class _SyncDockState extends State<SyncDock> {
   bool _isPlaying = false;
 
   void _controllerMaster() {
-    if (widget.syncVideoBetterPlayerControllers.isNotEmpty) {
+    if (widget.syncBPControllers.isNotEmpty) {
       try {
-        SyncVideoBetterPlayerController? masterCandidate;
+        SyncBPController? masterCandidate;
         Duration maxDuration = Duration.zero;
 
-        for (var syncVideoBetterPlayerController in widget.syncVideoBetterPlayerControllers.values) {
-          if (syncVideoBetterPlayerController.isReady) {
+        for (var syncBPController in widget.syncBPControllers.values) {
+          if (syncBPController.isReady) {
             final controllerDuration =
-                syncVideoBetterPlayerController.controller.videoPlayerController?.value.duration ??
+                syncBPController.controller.videoPlayerController?.value.duration ??
                     Duration.zero;
             if (controllerDuration > maxDuration) {
               maxDuration = controllerDuration;
-              masterCandidate = syncVideoBetterPlayerController;
+              masterCandidate = syncBPController;
             }
           }
         }
@@ -101,11 +101,11 @@ class _SyncDockState extends State<SyncDock> {
   }
 
   void _seekAll(Duration position) async {
-    for (var syncVideoBetterPlayerController in widget.syncVideoBetterPlayerControllers.values) {
+    for (var syncBPController in widget.syncBPControllers.values) {
       try {
-        if (syncVideoBetterPlayerController.isReady) {
-          await syncVideoBetterPlayerController.controller.seekTo(position);
-          syncVideoBetterPlayerController.controller.play();
+        if (syncBPController.isReady) {
+          await syncBPController.controller.seekTo(position);
+          syncBPController.controller.play();
         }
       } catch (e) {
         debugPrint('❌ Error seeking controller: $e');
@@ -120,20 +120,20 @@ class _SyncDockState extends State<SyncDock> {
 
   void _togglePlay() {
     if (_isPlaying) {
-      for (var syncVideoBetterPlayerController in widget.syncVideoBetterPlayerControllers.values) {
+      for (var syncBPController in widget.syncBPControllers.values) {
         try {
-          if (syncVideoBetterPlayerController.isReady) {
-            syncVideoBetterPlayerController.controller.pause();
+          if (syncBPController.isReady) {
+            syncBPController.controller.pause();
           }
         } catch (e) {
           debugPrint('❌ Error pausing controller: $e');
         }
       }
     } else {
-      for (var syncVideoBetterPlayerController in widget.syncVideoBetterPlayerControllers.values) {
+      for (var syncBPController in widget.syncBPControllers.values) {
         try {
-          if (syncVideoBetterPlayerController.isReady) {
-            syncVideoBetterPlayerController.controller.play();
+          if (syncBPController.isReady) {
+            syncBPController.controller.play();
           }
         } catch (e) {
           debugPrint('❌ Error playing controller: $e');

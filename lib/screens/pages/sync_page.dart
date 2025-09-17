@@ -1,25 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:multi_video/screens/components/button_go_back.dart';
-import 'package:multi_video/screens/components/syncVideo/button_download.dart';
-import 'package:multi_video/screens/components/syncVideo/sync_dock.dart';
-import 'package:multi_video/screens/components/syncVideo/sync_video_card.dart';
+import 'package:multi_video/screens/components/sync/button_download.dart';
+import 'package:multi_video/screens/components/sync/sync_card.dart';
+import 'package:multi_video/screens/components/sync/sync_dock.dart';
 import 'package:multi_video/screens/const/sync_const.dart';
-import 'package:multi_video/screens/controllers/sync_video_better_player_controller.dart';
-import 'package:multi_video/screens/controllers/sync_video_controller.dart';
+import 'package:multi_video/screens/controllers/sync_bp_controller.dart';
+import 'package:multi_video/screens/controllers/sync_controller.dart';
 
-class SyncVideoPage extends StatefulWidget {
+class SyncPage extends StatefulWidget {
   final List<Map<String, dynamic>> videos;
 
-  const SyncVideoPage({super.key, required this.videos});
+  const SyncPage({super.key, required this.videos});
 
   @override
-  State<SyncVideoPage> createState() => _SyncVideoPageState();
+  State<SyncPage> createState() => _SyncPageState();
 }
 
-class _SyncVideoPageState extends State<SyncVideoPage> {
-  late SyncVideoController _syncVideoController;
-  final Map<int, SyncVideoBetterPlayerController> _syncVideoBetterPlayerControllers = {};
+class _SyncPageState extends State<SyncPage> {
+  late SyncController _syncController;
+  final Map<int, SyncBPController> _syncBPControllers = {};
 
   @override
   void initState() {
@@ -30,18 +30,18 @@ class _SyncVideoPageState extends State<SyncVideoPage> {
       DeviceOrientation.landscapeRight,
     ]);
 
-    _syncVideoController = SyncVideoController();
+    _syncController = SyncController();
 
-    // _syncVideoController.addListener(() {
-    //   debugPrint('🚀 Selected channels: ${_syncVideoController.selectedChannels}');
-    //   debugPrint('🚀 All channels: ${_syncVideoController.allChannelsKeys}');
+    // _syncController.addListener(() {
+    //   debugPrint('🚀 Selected channels: ${_syncController.selectedChannels}');
+    //   debugPrint('🚀 All channels: ${_syncController.allChannelsKeys}');
     // });
 
     _initializeControllers();
   }
 
   Future<void> _initializeControllers() async {
-    _syncVideoController.setControllerCallbacks(
+    _syncController.setControllerCallbacks(
       _createController,
       _disposeController,
     );
@@ -49,25 +49,25 @@ class _SyncVideoPageState extends State<SyncVideoPage> {
     for (final video in widget.videos) {
       final channel = video["channel"];
       final url = video["url"];
-      _syncVideoController.addChannel(channel, url);
+      _syncController.addChannel(channel, url);
     }
 
-    for (int i = 0; i < widget.videos.length && i < maxChannelsToShow; i++) {
+    for (int i = 0; i < widget.videos.length && i < maxSyncChannelsToShow; i++) {
       final video = widget.videos[i];
       final channel = video["channel"];
-      _syncVideoController.toggleChannel(channel);
+      _syncController.toggleChannel(channel);
     }
   }
 
-  SyncVideoBetterPlayerController _createController(int channel, String url) {
+  SyncBPController _createController(int channel, String url) {
     // debugPrint('✅ Creating controller for channel $channel with URL: $url');
-    final controller = SyncVideoBetterPlayerController(url);
-    _syncVideoBetterPlayerControllers[channel] = controller;
+    final controller = SyncBPController(url);
+    _syncBPControllers[channel] = controller;
     return controller;
   }
 
   void _disposeController(int channel) {
-    final controller = _syncVideoBetterPlayerControllers.remove(channel);
+    final controller = _syncBPControllers.remove(channel);
 
     if (controller != null) {
       try {
@@ -84,9 +84,9 @@ class _SyncVideoPageState extends State<SyncVideoPage> {
     debugPrint('🔄 Disposing SyncVideoPage...');
 
     // Step 1: Dispose all video controllers first to free resources
-    final controllerKeys = _syncVideoBetterPlayerControllers.keys.toList();
+    final controllerKeys = _syncBPControllers.keys.toList();
     for (final channel in controllerKeys) {
-      final controller = _syncVideoBetterPlayerControllers[channel];
+      final controller = _syncBPControllers[channel];
       if (controller != null) {
         try {
           controller.dispose();
@@ -96,11 +96,11 @@ class _SyncVideoPageState extends State<SyncVideoPage> {
         }
       }
     }
-    _syncVideoBetterPlayerControllers.clear();
+    _syncBPControllers.clear();
 
     // Step 2: Dispose sync controller
     try {
-      _syncVideoController.dispose();
+      _syncController.dispose();
       debugPrint('✅ Sync controller disposed');
     } catch (e) {
       debugPrint('❌ Error disposing sync controller: $e');
@@ -125,7 +125,7 @@ class _SyncVideoPageState extends State<SyncVideoPage> {
     }
     
     return AnimatedBuilder(
-      animation: _syncVideoController,
+      animation: _syncController,
       builder: (context, child) {
         return Scaffold(
           backgroundColor: const Color(0xFF484847),
@@ -137,17 +137,17 @@ class _SyncVideoPageState extends State<SyncVideoPage> {
                   child: Stack(
                     children: [
                       Row(
-                        children: _syncVideoController.selectedChannels.asMap().entries.map((entry) {
+                        children: _syncController.selectedChannels.asMap().entries.map((entry) {
                           final index = entry.key;
                           final channel = entry.value;
-                          final syncVideoBetterPlayerController = _syncVideoBetterPlayerControllers[channel];
+                          final syncVideoBetterPlayerController = _syncBPControllers[channel];
                           return Expanded(
                             child: Padding(
-                              padding: EdgeInsets.only(right: index < _syncVideoController.selectedChannels.length - 1 ? 4.0 : 0),
+                              padding: EdgeInsets.only(right: index < _syncController.selectedChannels.length - 1 ? 4.0 : 0),
                               child: syncVideoBetterPlayerController != null
-                                  ? SyncVideoCard(
+                                  ? SyncCard(
                                       key: ValueKey(channel),
-                                      syncVideoBetterPlayerController: syncVideoBetterPlayerController,
+                                      syncBPController: syncVideoBetterPlayerController,
                                       channel: channel,
                                       onTap: () {},
                                     )
@@ -174,8 +174,8 @@ class _SyncVideoPageState extends State<SyncVideoPage> {
                   ),
                 ),
                 SyncDock(
-                  syncVideoBetterPlayerControllers: _syncVideoBetterPlayerControllers,
-                  syncController: _syncVideoController,
+                  syncBPControllers: _syncBPControllers,
+                  syncController: _syncController,
                 ),
               ],
             ),

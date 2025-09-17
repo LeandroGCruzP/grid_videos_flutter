@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:multi_video/screens/const/sync_const.dart';
-import 'package:multi_video/screens/controllers/sync_video_better_player_controller.dart';
+import 'package:multi_video/screens/controllers/sync_bp_controller.dart';
 
-typedef ControllerFactory = SyncVideoBetterPlayerController Function(int channel, String url);
+typedef ControllerFactory = SyncBPController Function(int channel, String url);
 typedef ControllerDisposer = void Function(int channel);
 
-class SyncVideoController extends ChangeNotifier {
+class SyncController extends ChangeNotifier {
   final List<int> _selectedChannels = [];
   final List<int> _allChannelsKeys = [];
   final Map<int, String> _channelUrls = {};
@@ -32,7 +32,7 @@ class SyncVideoController extends ChangeNotifier {
           _controllerDisposer!(channel);
         });
       }
-    } else if (_selectedChannels.length < maxChannelsToShow) {
+    } else if (_selectedChannels.length < maxSyncChannelsToShow) {
       _selectedChannels.add(channel);
       notifyListeners();
 
@@ -41,7 +41,7 @@ class SyncVideoController extends ChangeNotifier {
         _controllerFactory!(channel, url);
       }
     } else {
-      debugPrint('❌ Limite de canais atingido: $maxChannelsToShow');
+      debugPrint('❌ Limite de canais atingido: $maxSyncChannelsToShow');
     }
   }
 

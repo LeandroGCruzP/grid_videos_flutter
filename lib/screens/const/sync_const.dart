@@ -1,1 +1,1 @@
-const int maxChannelsToShow = 3;
+const int maxSyncChannelsToShow = 3;

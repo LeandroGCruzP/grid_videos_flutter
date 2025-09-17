@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:multi_video/screens/components/channel_option.dart';
-import 'package:multi_video/screens/const/sync_const.dart';
-import 'package:multi_video/screens/controllers/sync_video_controller.dart';
+import 'package:multi_video/screens/const/live_const.dart';
+import 'package:multi_video/screens/controllers/live_controller.dart';
 
-class ButtonChangeSyncChannels extends StatelessWidget {
-  final SyncVideoController syncController;
+class ButtonChangeLiveChannels extends StatelessWidget {
+  final LiveController liveController;
 
-  const ButtonChangeSyncChannels({
+  const ButtonChangeLiveChannels({
     super.key,
-    required this.syncController,
+    required this.liveController,
   });
 
   void _showChannelsTooltip(BuildContext context) {
@@ -42,7 +42,7 @@ class ButtonChangeSyncChannels extends StatelessWidget {
                   ),
                   padding: const EdgeInsets.all(8),
                   child: ListenableBuilder(
-                    listenable: syncController,
+                    listenable: liveController,
                     builder: (context, child) => Column(
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -60,7 +60,7 @@ class ButtonChangeSyncChannels extends StatelessWidget {
                             ),
                             const SizedBox(width: 10),
                             Text(
-                              '${syncController.selectedChannels.length}/$maxChannelsToShow',
+                              '${liveController.selectedChannels.length}/$maxLiveChannelsToShow',
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.w500,
@@ -69,14 +69,14 @@ class ButtonChangeSyncChannels extends StatelessWidget {
                             ),
                           ],
                         ),
-                        ...syncController.allChannelsKeys.map(
+                        ...liveController.allChannelsKeys.map(
                           (channel) => ChannelOption(
                               channel: channel,
-                              isSelected: syncController.isChannelSelected(channel),
-                              isDisabled: !syncController.isChannelSelected(channel) &&
-                                  syncController.selectedChannels.length >=
-                                      maxChannelsToShow,
-                              onTap: () => syncController.toggleChannel(channel),
+                              isSelected: liveController.isChannelSelected(channel),
+                              isDisabled: !liveController.isChannelSelected(channel) &&
+                                  liveController.selectedChannels.length >=
+                                      maxLiveChannelsToShow,
+                              onTap: () => liveController.toggleChannel(channel),
                             ),
                         ),
                       ],

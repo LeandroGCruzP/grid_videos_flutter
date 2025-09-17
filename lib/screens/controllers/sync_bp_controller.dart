@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:better_player_plus/better_player_plus.dart';
 import 'package:flutter/material.dart';
 
-class LiveStreamBetterPlayerController {
+class SyncBPController {
   BetterPlayerController? _controller;
   bool _isDisposed = false;
   bool _hasInitializationError = false;
@@ -19,7 +19,7 @@ class LiveStreamBetterPlayerController {
   bool get hasError => _hasInitializationError;
   bool get isReady => _controller != null && !_isDisposed && !_hasInitializationError;
 
-  LiveStreamBetterPlayerController(String videoUrl) {
+  SyncBPController(String videoUrl) {
     _initializeController(videoUrl);
   }
 
@@ -27,8 +27,8 @@ class LiveStreamBetterPlayerController {
     if (_isDisposed) return;
 
     try {
-      final config = _createLiveStreamConfig();
-      final dataSource = _createLiveStreamDataSource(videoUrl);
+      final config = _createSyncVideoConfig();
+      final dataSource = _createSyncVideoDataSource(videoUrl);
 
       if (!_isDisposed) {
         _controller = BetterPlayerController(
@@ -36,9 +36,7 @@ class LiveStreamBetterPlayerController {
           betterPlayerDataSource: dataSource,
         );
 
-        // Configure controller for live stream
-        _controller!.setControlsEnabled(false);
-        _controller!.play();
+        _controller!.setVolume(0.0);
         
         // Start monitoring for early codec errors
         _startErrorMonitoring();
@@ -96,67 +94,56 @@ class LiveStreamBetterPlayerController {
     });
   }
 
-  BetterPlayerConfiguration _createLiveStreamConfig() {
-    return BetterPlayerConfiguration(
+
+  BetterPlayerConfiguration _createSyncVideoConfig() {
+    return const BetterPlayerConfiguration(
       autoDispose: false,
       fit: BoxFit.contain,
       autoPlay: true,
+      startAt: Duration.zero,
       handleLifecycle: false,
       allowedScreenSleep: false,
       autoDetectFullscreenDeviceOrientation: false,
-      errorBuilder: (context, errorMessage) {
-        return Container(
-          color: Colors.black,
-          child: const Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.error_outline,
-                  color: Colors.red,
-                  size: 48,
-                ),
-                SizedBox(height: 16),
-                Text(
-                  'Live unavailable',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                SizedBox(height: 8),
-                Text(
-                  'Connection error',
-                  style: TextStyle(
-                    color: Colors.grey,
-                    fontSize: 12,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
+      deviceOrientationsAfterFullScreen: [],
+      controlsConfiguration: BetterPlayerControlsConfiguration(
+        showControls: false,
+        enableOverflowMenu: false,
+        enablePlayPause: false,
+        enableMute: false,
+        enableFullscreen: false,
+        enablePip: false,
+        enablePlaybackSpeed: false,
+        enableProgressText: false,
+        enableProgressBar: false,
+        enableSkips: false,
+        enableAudioTracks: false,
+        enableSubtitles: false,
+        enableQualities: false,
+        enableRetry: false,
+      ),
+    );
+  }
+
+
+  BetterPlayerDataSource _createSyncVideoDataSource(String videoUrl) {
+    return BetterPlayerDataSource(
+      BetterPlayerDataSourceType.network,
+      videoUrl,
+      liveStream: false,
+      videoFormat: BetterPlayerVideoFormat.other,
+      bufferingConfiguration: const BetterPlayerBufferingConfiguration(
+        minBufferMs: 500,
+        maxBufferMs: 2000,
+        bufferForPlaybackMs: 200,
+        bufferForPlaybackAfterRebufferMs: 500,
+      ),
+      headers: {
+        'Accept': 'video/mp4;q=0.5, video/webm;q=0.3, video/*;q=0.1',
+        'User-Agent': 'Flutter-OptimizedPlayer/1.0',
+        'Range': 'bytes=0-',
       },
     );
   }
-
-  BetterPlayerDataSource _createLiveStreamDataSource(String videoUrl) {
-    return BetterPlayerDataSource(
-      BetterPlayerDataSourceType.network, 
-      videoUrl,
-      liveStream: true,
-      videoFormat: BetterPlayerVideoFormat.hls,
-      bufferingConfiguration: const BetterPlayerBufferingConfiguration(
-        minBufferMs: 2000,
-        maxBufferMs: 10000,
-        bufferForPlaybackMs: 1000,
-        bufferForPlaybackAfterRebufferMs: 2000,
-      ),
-      videoExtension: 'm3u8',
-    );
-  }
-
 
   void dispose() {
     if (_isDisposed) return;
@@ -178,9 +165,9 @@ class LiveStreamBetterPlayerController {
         // Dispose controller (we have full control with autoDispose: false)
         _controller?.dispose();
 
-        debugPrint('✅ LiveStream BetterPlayer controller disposed successfully');
+        debugPrint('✅ BetterPlayer controller disposed successfully');
       } catch (e) {
-        debugPrint('❌ Error disposing LiveStream BetterPlayer controller: $e');
+        debugPrint('❌ Error disposing BetterPlayer controller: $e');
       } finally {
         // Always clear reference
         _controller = null;
