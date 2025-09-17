@@ -27,6 +27,12 @@ class SyncController extends ChangeNotifier {
 
   void toggleChannel(int channel) {
     if (_selectedChannels.contains(channel)) {
+      // If removing the fullscreen channel, exit fullscreen first
+      if (_fullscreenChannel == channel) {
+        debugPrint('↩️ Exiting fullscreen before removing channel $channel');
+        _fullscreenChannel = null;
+      }
+
       _selectedChannels.remove(channel);
       notifyListeners();
 
