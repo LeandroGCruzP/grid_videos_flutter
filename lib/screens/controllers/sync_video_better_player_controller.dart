@@ -98,6 +98,7 @@ class SyncVideoBetterPlayerController {
 
   BetterPlayerConfiguration _createSyncVideoConfig() {
     return const BetterPlayerConfiguration(
+      autoDispose: false,
       fit: BoxFit.contain,
       autoPlay: true,
       startAt: Duration.zero,

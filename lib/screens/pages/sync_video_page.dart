@@ -31,25 +31,49 @@ class _SyncVideoPageState extends State<SyncVideoPage> {
 
     _syncVideoController = SyncVideoController();
 
-    _syncVideoController.addListener(() {
-      debugPrint('🚀 Selected channels: ${_syncVideoController.selectedChannels}');
-      debugPrint('🚀 All channels: ${_syncVideoController.allChannelsKeys}');
-    });
+    // _syncVideoController.addListener(() {
+    //   debugPrint('🚀 Selected channels: ${_syncVideoController.selectedChannels}');
+    //   debugPrint('🚀 All channels: ${_syncVideoController.allChannelsKeys}');
+    // });
 
     _initializeControllers();
   }
 
   Future<void> _initializeControllers() async {
+    _syncVideoController.setControllerCallbacks(
+      _createController,
+      _disposeController,
+    );
+
     for (final video in widget.videos) {
       final channel = video["channel"];
-      _syncVideoController.addChannel(channel);
+      final url = video["url"];
+      _syncVideoController.addChannel(channel, url);
     }
 
     for (int i = 0; i < widget.videos.length && i < maxChannelsToShow; i++) {
       final video = widget.videos[i];
       final channel = video["channel"];
-      _syncVideoBetterPlayerControllers[channel] = SyncVideoBetterPlayerController(video["url"]); // aqui não converte para string
       _syncVideoController.toggleChannel(channel);
+    }
+  }
+
+  SyncVideoBetterPlayerController _createController(int channel, String url) {
+    final controller = SyncVideoBetterPlayerController(url);
+    _syncVideoBetterPlayerControllers[channel] = controller;
+    return controller;
+  }
+
+  void _disposeController(int channel) {
+    final controller = _syncVideoBetterPlayerControllers.remove(channel);
+
+    if (controller != null) {
+      try {
+        controller.dispose();
+        debugPrint('✅ Canal $channel disposed com sucesso');
+      } catch (e) {
+        debugPrint('⚠️ Erro no dispose: $e');
+      }
     }
   }
 
@@ -86,33 +110,26 @@ class _SyncVideoPageState extends State<SyncVideoPage> {
             padding: const EdgeInsets.all(5.0),
             child: Stack(
               children: [
-                // Video area
                 Row(
-                  children: List.generate(
-                    maxChannelsToShow,
-                    (index) {
-                      if (index >= widget.videos.length) {
-                        return const SizedBox.shrink();
-                      }
-                
-                      final video = widget.videos[index];
-                      final channel = video["channel"];
-                      final syncVideoBetterPlayerController = _syncVideoBetterPlayerControllers[channel];
-                
-                      return Expanded(
-                        child: Padding(
-                          padding: EdgeInsets.only(right: index < maxChannelsToShow - 1 ? 4.0 : 0),
-                          child: syncVideoBetterPlayerController != null 
-                            ? SyncVideoCard(
-                                syncVideoBetterPlayerController: syncVideoBetterPlayerController,
-                                channel: channel,
-                                onTap: () {},
-                              )
-                            : const SizedBox.shrink(),
-                        )
-                      );
-                    },
-                  ),
+                  children: _syncVideoController.selectedChannels.asMap().entries.map((entry) {
+                    final index = entry.key;
+                    final channel = entry.value;
+                    final syncVideoBetterPlayerController = _syncVideoBetterPlayerControllers[channel];
+
+                    return Expanded(
+                      child: Padding(
+                        padding: EdgeInsets.only(right: index < _syncVideoController.selectedChannels.length - 1 ? 4.0 : 0),
+                        child: syncVideoBetterPlayerController != null
+                          ? SyncVideoCard(
+                              key: ValueKey(channel),
+                              syncVideoBetterPlayerController: syncVideoBetterPlayerController,
+                              channel: channel,
+                              onTap: () {},
+                            )
+                          : const SizedBox.shrink(),
+                      )
+                    );
+                  }).toList(),
                 ),
                 const Positioned(
                   top: 0,
