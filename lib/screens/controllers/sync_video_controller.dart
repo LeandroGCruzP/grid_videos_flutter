@@ -41,7 +41,7 @@ class SyncVideoController extends ChangeNotifier {
         _controllerFactory!(channel, url);
       }
     } else {
-      debugPrint('Limite de canais atingido: $maxChannelsToShow');
+      debugPrint('❌ Limite de canais atingido: $maxChannelsToShow');
     }
   }
 

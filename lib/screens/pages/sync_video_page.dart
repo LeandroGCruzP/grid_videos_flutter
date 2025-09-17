@@ -59,6 +59,7 @@ class _SyncVideoPageState extends State<SyncVideoPage> {
   }
 
   SyncVideoBetterPlayerController _createController(int channel, String url) {
+    // debugPrint('✅ Creating controller for channel $channel with URL: $url');
     final controller = SyncVideoBetterPlayerController(url);
     _syncVideoBetterPlayerControllers[channel] = controller;
     return controller;
@@ -70,15 +71,41 @@ class _SyncVideoPageState extends State<SyncVideoPage> {
     if (controller != null) {
       try {
         controller.dispose();
-        debugPrint('✅ Canal $channel disposed com sucesso');
+        debugPrint('✅ Channel $channel disposed successfully');
       } catch (e) {
-        debugPrint('⚠️ Erro no dispose: $e');
+        debugPrint('❌ Error disposing: $e');
       }
     }
   }
 
   @override
   void dispose() {
+    debugPrint('🔄 Disposing SyncVideoPage...');
+
+    // Step 1: Dispose all video controllers first to free resources
+    final controllerKeys = _syncVideoBetterPlayerControllers.keys.toList();
+    for (final channel in controllerKeys) {
+      final controller = _syncVideoBetterPlayerControllers[channel];
+      if (controller != null) {
+        try {
+          controller.dispose();
+          debugPrint('✅ Video controller for channel $channel disposed');
+        } catch (e) {
+          debugPrint('❌ Error disposing video controller for channel $channel: $e');
+        }
+      }
+    }
+    _syncVideoBetterPlayerControllers.clear();
+
+    // Step 2: Dispose sync controller
+    try {
+      _syncVideoController.dispose();
+      debugPrint('✅ Sync controller disposed');
+    } catch (e) {
+      debugPrint('❌ Error disposing sync controller: $e');
+    }
+
+    // Step 3: Restore device orientation
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
       DeviceOrientation.portraitDown,
@@ -86,12 +113,7 @@ class _SyncVideoPageState extends State<SyncVideoPage> {
       DeviceOrientation.landscapeRight,
     ]);
 
-    _syncVideoController.dispose();
-
-    for (final syncVideoBetterPlayerController in _syncVideoBetterPlayerControllers.values) {
-      syncVideoBetterPlayerController.dispose();
-    }
-
+    debugPrint('✅ SyncVideoPage disposed successfully');
     super.dispose();
   }
 
@@ -108,43 +130,43 @@ class _SyncVideoPageState extends State<SyncVideoPage> {
           backgroundColor: const Color(0xFF484847),
           body: Padding(
             padding: const EdgeInsets.all(5.0),
-            child: Stack(
+            child: Column(
               children: [
-                Row(
-                  children: _syncVideoController.selectedChannels.asMap().entries.map((entry) {
-                    final index = entry.key;
-                    final channel = entry.value;
-                    final syncVideoBetterPlayerController = _syncVideoBetterPlayerControllers[channel];
-
-                    return Expanded(
-                      child: Padding(
-                        padding: EdgeInsets.only(right: index < _syncVideoController.selectedChannels.length - 1 ? 4.0 : 0),
-                        child: syncVideoBetterPlayerController != null
-                          ? SyncVideoCard(
-                              key: ValueKey(channel),
-                              syncVideoBetterPlayerController: syncVideoBetterPlayerController,
-                              channel: channel,
-                              onTap: () {},
-                            )
-                          : const SizedBox.shrink(),
-                      )
-                    );
-                  }).toList(),
-                ),
-                const Positioned(
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  child: Header(),
-                ),
-                Positioned(
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  child: SyncDock(
-                    syncVideoBetterPlayerControllers: _syncVideoBetterPlayerControllers,
-                    syncController: _syncVideoController,
+                Expanded(
+                  child: Stack(
+                    children: [
+                      Row(
+                        children: _syncVideoController.selectedChannels.asMap().entries.map((entry) {
+                          final index = entry.key;
+                          final channel = entry.value;
+                          final syncVideoBetterPlayerController = _syncVideoBetterPlayerControllers[channel];
+                          return Expanded(
+                            child: Padding(
+                              padding: EdgeInsets.only(right: index < _syncVideoController.selectedChannels.length - 1 ? 4.0 : 0),
+                              child: syncVideoBetterPlayerController != null
+                                  ? SyncVideoCard(
+                                      key: ValueKey(channel),
+                                      syncVideoBetterPlayerController: syncVideoBetterPlayerController,
+                                      channel: channel,
+                                      onTap: () {},
+                                    )
+                                  : const SizedBox.shrink(),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                      const Positioned(
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        child: Header(),
+                      ),
+                    ],
                   ),
+                ),
+                SyncDock(
+                  syncVideoBetterPlayerControllers: _syncVideoBetterPlayerControllers,
+                  syncController: _syncVideoController,
                 ),
               ],
             ),

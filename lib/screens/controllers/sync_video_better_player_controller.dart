@@ -44,7 +44,7 @@ class SyncVideoBetterPlayerController {
       }
       
     } catch (e) {
-      debugPrint('Controller initialization failed: $e');
+      debugPrint('❌ Controller initialization failed: $e');
       if (!_isDisposed) {
         _hasInitializationError = true;
       }
@@ -62,7 +62,7 @@ class SyncVideoBetterPlayerController {
       try {
         // Simple check - if controller becomes null, it's likely an error
         if (_controller == null) {
-          debugPrint('Controller became null - possible initialization failure');
+          debugPrint('❌ Controller became null - possible initialization failure');
           _hasInitializationError = true;
           timer.cancel();
           return;
@@ -75,20 +75,20 @@ class SyncVideoBetterPlayerController {
           
           // Stop monitoring after reasonable time if no errors
           if (timer.tick > 8) { // 4 seconds (500ms * 8)
-            debugPrint('Video monitoring completed - no errors detected');
+            debugPrint('✅ Video monitoring completed - no errors detected');
             timer.cancel();
             return;
           }
         } catch (controllerError) {
           // If accessing basic properties fails, likely a codec/initialization error
-          debugPrint('Controller access failed - codec error likely: $controllerError');
+          debugPrint('❌ Controller access failed - codec error likely: $controllerError');
           _hasInitializationError = true;
           timer.cancel();
           return;
         }
         
       } catch (e) {
-        debugPrint('Error during monitoring: $e');
+        debugPrint('❌ Error during monitoring: $e');
         _hasInitializationError = true;
         timer.cancel();
       }
@@ -103,24 +103,25 @@ class SyncVideoBetterPlayerController {
       autoPlay: true,
       startAt: Duration.zero,
       handleLifecycle: false,
-      allowedScreenSleep: true,
+      allowedScreenSleep: false,
       autoDetectFullscreenDeviceOrientation: false,
       deviceOrientationsAfterFullScreen: [],
       controlsConfiguration: BetterPlayerControlsConfiguration(
-        // showControls: false,
+        showControls: false,
         // controlsHideTime: Duration(seconds: 10000),
         enableOverflowMenu: false,
         enablePlayPause: false,
         enableMute: false,
-        enableFullscreen: true,
+        enableFullscreen: false,
         enablePip: false,
         enablePlaybackSpeed: false,
-        enableProgressText: true,
-        enableProgressBar: true,
+        enableProgressText: false,
+        enableProgressBar: false,
         enableSkips: false,
         enableAudioTracks: false,
         enableSubtitles: false,
         enableQualities: false,
+        enableRetry: false,
       ),
     );
   }
@@ -148,19 +149,31 @@ class SyncVideoBetterPlayerController {
 
   void dispose() {
     if (_isDisposed) return;
-    
+
     _isDisposed = true;
+
+    // Cancel monitoring timer first
     _errorCheckTimer?.cancel();
-    
+    _errorCheckTimer = null;
+
     if (_controller != null) {
-      Timer(const Duration(milliseconds: 100), () {
-        try {
-          _controller?.dispose();
-        } catch (e) {
-          // Ignore dispose errors
-        }
+      try {
+        // Stop playback to release network resources
+        _controller?.pause();
+
+        // Clear cache to free memory
+        _controller?.clearCache();
+
+        // Dispose controller (we have full control with autoDispose: false)
+        _controller?.dispose();
+
+        debugPrint('✅ BetterPlayer controller disposed successfully');
+      } catch (e) {
+        debugPrint('❌ Error disposing BetterPlayer controller: $e');
+      } finally {
+        // Always clear reference
         _controller = null;
-      });
+      }
     }
   }
 }
