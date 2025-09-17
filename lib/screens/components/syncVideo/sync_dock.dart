@@ -80,11 +80,6 @@ class _SyncDockState extends State<SyncDock> {
         break;
 
       case BetterPlayerEventType.pause:
-        setState(() {
-          _isPlaying = false;
-        });
-        break;
-
       case BetterPlayerEventType.finished:
         setState(() {
           _isPlaying = false;
