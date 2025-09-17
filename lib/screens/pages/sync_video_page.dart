@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:multi_video/screens/components/header.dart';
+import 'package:multi_video/screens/components/button_go_back.dart';
+import 'package:multi_video/screens/components/syncVideo/button_download.dart';
 import 'package:multi_video/screens/components/syncVideo/sync_dock.dart';
 import 'package:multi_video/screens/components/syncVideo/sync_video_card.dart';
 import 'package:multi_video/screens/const/sync_const.dart';
@@ -155,11 +156,19 @@ class _SyncVideoPageState extends State<SyncVideoPage> {
                           );
                         }).toList(),
                       ),
+                      // Header
                       const Positioned(
                         top: 0,
                         left: 0,
                         right: 0,
-                        child: Header(),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            ButtonGoBack(),
+                            ButtonDownload(),
+                          ],
+                        ),
                       ),
                     ],
                   ),
