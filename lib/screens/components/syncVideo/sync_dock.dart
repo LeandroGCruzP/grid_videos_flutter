@@ -263,10 +263,14 @@ class _SyncDockState extends State<SyncDock> {
 
               // Swap Channels button aligned to the right
               Align(
-                  alignment: Alignment.centerRight,
-                  child: ButtonChangeChannels(
+                alignment: Alignment.centerRight,
+                child: ListenableBuilder(
+                  listenable: widget.syncController,
+                  builder: (context, child) => ButtonChangeChannels(
                     syncController: widget.syncController,
-                  ))
+                  ),
+                ),
+              )
             ],
           ),
         )

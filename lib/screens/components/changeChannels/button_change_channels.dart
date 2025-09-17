@@ -41,45 +41,46 @@ class ButtonChangeChannels extends StatelessWidget {
                     ),
                   ),
                   padding: const EdgeInsets.all(8),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text(
-                            'Canais',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w500,
-                              fontSize: 12,
+                  child: ListenableBuilder(
+                    listenable: syncController,
+                    builder: (context, child) => Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              'Canais',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w500,
+                                fontSize: 12,
+                              ),
                             ),
-                          ),
-                          const SizedBox(width: 10),
-                          Text(
-                            '${syncController.selectedChannels.length}/$maxChannelsToShow',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w500,
-                              fontSize: 8,
+                            const SizedBox(width: 10),
+                            Text(
+                              '${syncController.selectedChannels.length}/$maxChannelsToShow',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w500,
+                                fontSize: 8,
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
-                      ...syncController.allChannelsKeys.map(
-                        (channel) => GestureDetector(
-                          onTap: () {
-                            syncController.toggleChannel(channel);
-                          },
-                          child: ChannelOption(
-                            channel: channel,
-                            isSelected: syncController.isChannelSelected(channel),
-                            onTap: () => syncController.toggleChannel(channel),
-                          ),
+                          ],
                         ),
-                      ),
-                    ],
+                        ...syncController.allChannelsKeys.map(
+                          (channel) => ChannelOption(
+                              channel: channel,
+                              isSelected: syncController.isChannelSelected(channel),
+                              isDisabled: !syncController.isChannelSelected(channel) &&
+                                  syncController.selectedChannels.length >=
+                                      maxChannelsToShow,
+                              onTap: () => syncController.toggleChannel(channel),
+                            ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),

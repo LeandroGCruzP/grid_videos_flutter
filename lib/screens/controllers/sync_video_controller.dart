@@ -11,11 +11,17 @@ class SyncVideoController extends ChangeNotifier {
 
   void toggleChannel(int channel) {
     if (_selectedChannels.contains(channel)) {
+      debugPrint('Removendo canal: $channel');
       _selectedChannels.remove(channel);
+
+      // eliminar o controller do video associado a esse canal
     } else if (_selectedChannels.length < maxChannelsToShow) {
+      debugPrint('Adicionando canal: $channel');
       _selectedChannels.add(channel);
+
+      // criar o controller do video associado a esse canal
     } else {
-      // Opcional: throw exception ou callback de erro
+      debugPrint('Limite de canais atingido: $maxChannelsToShow');
       return;
     }
     notifyListeners();
