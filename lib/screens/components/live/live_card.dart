@@ -7,8 +7,9 @@ import 'package:multi_video/screens/controllers/live_bp_controller.dart';
 class LiveCard extends StatelessWidget {
   final int channel;
   final LiveBPController liveBPController;
+  final VoidCallback? onTap;
 
-  const LiveCard({super.key, required this.liveBPController, required this.channel});
+  const LiveCard({super.key, required this.liveBPController, required this.channel, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -23,12 +24,16 @@ class LiveCard extends StatelessWidget {
         children: [
           // Channel name
           ChannelName(channel: channel),
+          const SizedBox(height: 4),
           // Video Player
           Flexible(
             child: Center(
-              child: !isReady
-                ? const LoadingVideo()
-                : BetterPlayer(controller: liveBPController.controller)
+              child: GestureDetector(
+                onTap: onTap,
+                child: !isReady
+                  ? const LoadingVideo()
+                  : BetterPlayer(controller: liveBPController.controller)
+              ),
             ),
           ),
         ],

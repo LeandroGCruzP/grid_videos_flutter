@@ -117,6 +117,43 @@ class _LivePageState extends State<LivePage> {
     super.dispose();
   }
 
+  Widget _buildGridView() {
+    return Row(
+      children: _liveController.selectedChannels.asMap().entries.map((entry) {
+        final index = entry.key;
+        final channel = entry.value;
+        final liveStreamBetterPlayerController = _liveBPControllers[channel];
+        return Expanded(
+          child: Padding(
+            padding: EdgeInsets.only(right: index < _liveController.selectedChannels.length - 1 ? 4.0 : 0),
+            child: liveStreamBetterPlayerController != null
+                ? LiveCard(
+                    key: ValueKey(channel),
+                    channel: channel,
+                    liveBPController: liveStreamBetterPlayerController,
+                    onTap: () => _liveController.toggleFullscreen(channel),
+                  )
+                : const SizedBox.shrink(),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildFullscreenView() {
+    final fullscreenChannel = _liveController.fullscreenChannel;
+    if (fullscreenChannel == null) return const SizedBox.shrink();
+
+    final liveStreamBetterPlayerController = _liveBPControllers[fullscreenChannel];
+    if (liveStreamBetterPlayerController == null) return const SizedBox.shrink();
+
+    return LiveCard(
+      key: ValueKey('live_fullscreen_$fullscreenChannel'),
+      channel: fullscreenChannel,
+      liveBPController: liveStreamBetterPlayerController,
+      onTap: () => _liveController.exitFullscreen(),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -136,27 +173,10 @@ class _LivePageState extends State<LivePage> {
                 Expanded(
                   child: Stack(
                     children: [
-                      Row(
-                        children: _liveController.selectedChannels.asMap().entries.map((entry) {
-                          final index = entry.key;
-                          final channel = entry.value;
-                          final liveStreamBetterPlayerController = _liveBPControllers[channel];
-                          return Expanded(
-                            child: Padding(
-                              padding: EdgeInsets.only(right: index < _liveController.selectedChannels.length - 1 ? 4.0 : 0),
-                              child: liveStreamBetterPlayerController != null
-                                  ? LiveCard(
-                                      key: ValueKey(channel),
-                                      channel: channel,
-                                      // videoUrl: _liveController.getChannelUrl(channel) ?? '',
-                                      // onTap: () {},
-                                      liveBPController: liveStreamBetterPlayerController,
-                                    )
-                                  : const SizedBox.shrink(),
-                            ),
-                          );
-                        }).toList(),
-                      ),
+                      // Video display area
+                      _liveController.isFullscreen
+                          ? _buildFullscreenView()
+                          : _buildGridView(),
                       // Header
                       const Positioned(
                         top: 0,
