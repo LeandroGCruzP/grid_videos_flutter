@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:multi_video/screens/components/button_go_back.dart';
+import 'package:multi_video/screens/components/empty_selected_channels.dart';
 import 'package:multi_video/screens/components/sync/button_download.dart';
 import 'package:multi_video/screens/components/sync/sync_card.dart';
 import 'package:multi_video/screens/components/sync/sync_dock.dart';
@@ -103,6 +104,10 @@ class _SyncPageState extends State<SyncPage> {
   }
 
   Widget _buildGridView() {
+    if (_syncController.selectedChannels.isEmpty) {
+      return const EmptySelectedChannels();
+    }
+
     return Row(
       children: _syncController.selectedChannels.asMap().entries.map((entry) {
         final index = entry.key;

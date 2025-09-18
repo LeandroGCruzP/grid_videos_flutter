@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:multi_video/screens/components/button_go_back.dart';
+import 'package:multi_video/screens/components/empty_selected_channels.dart';
 import 'package:multi_video/screens/components/live/button_change_live_channels.dart';
 import 'package:multi_video/screens/components/live/live_card.dart';
 import 'package:multi_video/screens/const/live_const.dart';
@@ -102,6 +103,10 @@ class _LivePageState extends State<LivePage> {
   }
 
   Widget _buildGridView() {
+    if (_liveController.selectedChannels.isEmpty) {
+      return const EmptySelectedChannels();
+    }
+
     return Row(
       children: _liveController.selectedChannels.asMap().entries.map((entry) {
         final index = entry.key;
