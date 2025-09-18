@@ -163,7 +163,7 @@ class SyncBPController {
         _controller?.clearCache();
 
         // Dispose controller (we have full control with autoDispose: false)
-        _controller?.dispose();
+        _controller?.dispose(forceDispose: true);
 
         debugPrint('✅ BetterPlayer controller disposed successfully');
       } catch (e) {

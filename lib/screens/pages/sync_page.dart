@@ -68,15 +68,7 @@ class _SyncPageState extends State<SyncPage> {
 
   void _disposeController(int channel) {
     final controller = _syncBPControllers.remove(channel);
-
-    if (controller != null) {
-      try {
-        controller.dispose();
-        debugPrint('✅ Channel $channel disposed successfully');
-      } catch (e) {
-        debugPrint('❌ Error disposing: $e');
-      }
-    }
+    controller?.dispose();
   }
 
   @override
@@ -86,15 +78,7 @@ class _SyncPageState extends State<SyncPage> {
     // Step 1: Dispose all video controllers first to free resources
     final controllerKeys = _syncBPControllers.keys.toList();
     for (final channel in controllerKeys) {
-      final controller = _syncBPControllers[channel];
-      if (controller != null) {
-        try {
-          controller.dispose();
-          debugPrint('✅ Video controller for channel $channel disposed');
-        } catch (e) {
-          debugPrint('❌ Error disposing video controller for channel $channel: $e');
-        }
-      }
+      _syncBPControllers[channel]?.dispose();
     }
     _syncBPControllers.clear();
 

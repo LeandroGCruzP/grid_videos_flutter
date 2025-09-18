@@ -67,15 +67,7 @@ class _LivePageState extends State<LivePage> {
 
   void _disposeController(int channel) {
     final controller = _liveBPControllers.remove(channel);
-
-    if (controller != null) {
-      try {
-        controller.dispose();
-        debugPrint('✅ Channel $channel disposed successfully');
-      } catch (e) {
-        debugPrint('❌ Error disposing: $e');
-      }
-    }
+    controller?.dispose();
   }
 
   @override
@@ -85,15 +77,7 @@ class _LivePageState extends State<LivePage> {
     // Step 1: Dispose all video controllers first to free resources
     final controllerKeys = _liveBPControllers.keys.toList();
     for (final channel in controllerKeys) {
-      final controller = _liveBPControllers[channel];
-      if (controller != null) {
-        try {
-          controller.dispose();
-          debugPrint('✅ Video controller for channel $channel disposed');
-        } catch (e) {
-          debugPrint('❌ Error disposing video controller for channel $channel: $e');
-        }
-      }
+      _liveBPControllers[channel]?.dispose();
     }
     _liveBPControllers.clear();
 
