@@ -35,6 +35,49 @@ class SyncController extends ChangeNotifier {
   Duration get currentPosition => _currentPosition;
   bool get isPlaying => _isPlaying;
 
+  // Sync methods
+  void seekAll(Duration position) async {
+    debugPrint('🟢 Seeking all controllers to position: $position');
+    for (var controller in _controllers.values) {
+      try {
+        if (controller.isReady) {
+          await controller.controller.seekTo(position);
+          if (_isPlaying) {
+            controller.controller.play();
+          }
+        }
+      } catch (e) {
+        debugPrint('❌ Error seeking controller: $e');
+      }
+    }
+  }
+
+  void playAll() {
+    debugPrint('🟢 Playing all controllers');
+    for (var controller in _controllers.values) {
+      try {
+        if (controller.isReady) {
+          controller.controller.play();
+        }
+      } catch (e) {
+        debugPrint('❌ Error playing controller: $e');
+      }
+    }
+  }
+
+  void pauseAll() {
+    debugPrint('🟢 Pausing all controllers');
+    for (var controller in _controllers.values) {
+      try {
+        if (controller.isReady) {
+          controller.controller.pause();
+        }
+      } catch (e) {
+        debugPrint('❌ Error pausing controller: $e');
+      }
+    }
+  }
+
   void setControllerCallbacks(ControllerFactory factory, ControllerDisposer disposer) {
     _controllerFactory = factory;
     _controllerDisposer = disposer;
@@ -44,6 +87,13 @@ class SyncController extends ChangeNotifier {
     debugPrint('🟢 Registering controller for channel $channel');
     _controllers[channel] = controller;
     _setupDurationListener(channel, controller);
+
+    // Aguardar controller estar pronto antes de sincronizar
+    if (_masterController != null && _currentPosition != Duration.zero) {
+      debugPrint('🟢 Scheduling sync for new controller to position: $_currentPosition');
+      _scheduleControllerSync(controller, _currentPosition);
+    }
+
     _updateMasterController();
   }
 
@@ -66,21 +116,113 @@ class SyncController extends ChangeNotifier {
         _durationTimers[channel]?.cancel();
         _durationTimers.remove(channel);
 
-        // Recalcular master controller quando nova duração for carregada
+        // Primeiro recalcular master controller quando nova duração for carregada
+        final previousMaster = _masterController;
         _updateMasterController();
+
+        // Se não houve mudança de master, sincronizar com posição atual
+        if (_masterController == previousMaster && _masterController != null && _currentPosition != Duration.zero) {
+          debugPrint('🟢 Late scheduling sync for controller $channel to position: $_currentPosition');
+          _scheduleControllerSync(controller, _currentPosition);
+        }
       }
     }
 
     videoController?.addListener(durationListener);
 
     // Timeout para evitar listener infinito (10 segundos)
-    _durationTimers[channel] = Timer(Duration(seconds: 10), () {
+    _durationTimers[channel] = Timer(const Duration(seconds: 10), () {
       debugPrint('❌ Duration listener timeout for channel $channel');
       videoController?.removeListener(durationListener);
       _durationTimers.remove(channel);
     });
 
     debugPrint('🟢 Duration listener setup for channel $channel');
+  }
+
+  void _scheduleControllerSync(SyncBPController controller, Duration position, {int attempt = 1, int maxAttempts = 10}) {
+    debugPrint('🟢 Scheduling sync attempt $attempt/$maxAttempts for position: $position');
+
+    Timer(Duration(milliseconds: 500 * attempt), () {
+      if (controller.isReady) {
+        debugPrint('🟢 Controller ready, syncing to position: $position');
+        _syncControllerToPosition(controller, position);
+      } else if (attempt < maxAttempts) {
+        debugPrint('🟢 Controller not ready, retrying in ${500 * (attempt + 1)}ms (attempt ${attempt + 1}/$maxAttempts)');
+        _scheduleControllerSync(controller, position, attempt: attempt + 1, maxAttempts: maxAttempts);
+      } else {
+        debugPrint('❌ Controller sync failed after $maxAttempts attempts');
+      }
+    });
+  }
+
+  void _syncControllerToPosition(SyncBPController controller, Duration position) async {
+    try {
+      if (controller.isReady) {
+        await controller.controller.seekTo(position);
+        debugPrint('🟢 Controller synced to position: $position');
+
+        // Se o master está tocando, tocar o novo controller também
+        if (_isPlaying) {
+          controller.controller.play();
+          debugPrint('🟢 New controller started playing');
+        } else {
+          controller.controller.pause();
+          debugPrint('🟢 New controller paused');
+        }
+      } else {
+        debugPrint('❌ Cannot sync controller - not ready yet');
+      }
+    } catch (e) {
+      debugPrint('❌ Error syncing controller to position: $e');
+    }
+  }
+
+  void _scheduleNewMasterSync(SyncBPController masterController, Duration position, bool shouldPlay, {int attempt = 1, int maxAttempts = 10}) {
+    debugPrint('🟢 Scheduling new master sync attempt $attempt/$maxAttempts for position: $position');
+
+    Timer(Duration(milliseconds: 500 * attempt), () {
+      if (masterController.isReady) {
+        debugPrint('🟢 New master ready, syncing to position: $position');
+        _syncNewMasterToPosition(masterController, position, shouldPlay);
+      } else if (attempt < maxAttempts) {
+        debugPrint('🟢 New master not ready, retrying in ${500 * (attempt + 1)}ms (attempt ${attempt + 1}/$maxAttempts)');
+        _scheduleNewMasterSync(masterController, position, shouldPlay, attempt: attempt + 1, maxAttempts: maxAttempts);
+      } else {
+        debugPrint('❌ New master sync failed after $maxAttempts attempts');
+      }
+    });
+  }
+
+  void _syncNewMasterToPosition(SyncBPController masterController, Duration position, bool shouldPlay) async {
+    try {
+      if (masterController.isReady) {
+        await masterController.controller.seekTo(position);
+        _currentPosition = position;
+        debugPrint('🟢 New master synced to inherited position: $position');
+
+        if (shouldPlay) {
+          masterController.controller.play();
+          _isPlaying = true;
+          debugPrint('🟢 New master started playing');
+        } else {
+          masterController.controller.pause();
+          _isPlaying = false;
+          debugPrint('🟢 New master paused');
+        }
+
+        // Também sincronizar todos os outros controllers com delay
+        for (var entry in _controllers.entries) {
+          if (entry.value != masterController) {
+            _scheduleControllerSync(entry.value, position);
+          }
+        }
+      } else {
+        debugPrint('❌ Cannot sync new master - not ready yet');
+      }
+    } catch (e) {
+      debugPrint('❌ Error syncing new master to position: $e');
+    }
   }
 
   void _updateMasterController() {
@@ -116,11 +258,26 @@ class SyncController extends ChangeNotifier {
       }
 
       if (masterCandidate != null && masterCandidate.controller != _masterController) {
+        final previousPosition = _currentPosition;
+        final wasPlaying = _isPlaying;
+
         debugPrint('🟢 Setting new master controller with duration: $maxDuration');
+        debugPrint('🟢 Previous position to inherit: $previousPosition, was playing: $wasPlaying');
+
         _masterController?.removeEventsListener(_onPlayerEvent);
         _masterController = masterCandidate.controller;
         _masterController?.addEventsListener(_onPlayerEvent);
         _totalDuration = maxDuration;
+
+        // Sincronizar novo master com posição anterior
+        if (previousPosition != Duration.zero && previousPosition <= maxDuration) {
+          debugPrint('🟢 Scheduling new master sync to inherited position: $previousPosition');
+          _scheduleNewMasterSync(masterCandidate, previousPosition, wasPlaying);
+        } else if (previousPosition > maxDuration) {
+          debugPrint('🟢 Previous position ($previousPosition) exceeds new master duration ($maxDuration), seeking to end');
+          _scheduleNewMasterSync(masterCandidate, maxDuration, wasPlaying);
+        }
+
         debugPrint('🟢 Master controller set successfully');
         notifyListeners();
       } else if (masterCandidate == null) {

@@ -15,47 +15,18 @@ class SyncDock extends StatefulWidget {
 
 class _SyncDockState extends State<SyncDock> {
 
-  void _seekAll(Duration position) async {
-    for (var syncBPController in widget.syncBPControllers.values) {
-      try {
-        if (syncBPController.isReady) {
-          await syncBPController.controller.seekTo(position);
-          syncBPController.controller.play();
-        }
-      } catch (e) {
-        debugPrint('❌ Error seeking controller: $e');
-      }
-    }
-  }
-
   void _changeTimePosition(int value) {
     final newPosition = Duration(seconds: value.toInt());
-    _seekAll(newPosition);
+    widget.syncController.seekAll(newPosition);
   }
 
   void _togglePlay() {
     final isPlaying = widget.syncController.isPlaying;
 
     if (isPlaying) {
-      for (var syncBPController in widget.syncBPControllers.values) {
-        try {
-          if (syncBPController.isReady) {
-            syncBPController.controller.pause();
-          }
-        } catch (e) {
-          debugPrint('❌ Error pausing controller: $e');
-        }
-      }
+      widget.syncController.pauseAll();
     } else {
-      for (var syncBPController in widget.syncBPControllers.values) {
-        try {
-          if (syncBPController.isReady) {
-            syncBPController.controller.play();
-          }
-        } catch (e) {
-          debugPrint('❌ Error playing controller: $e');
-        }
-      }
+      widget.syncController.playAll();
     }
   }
 
