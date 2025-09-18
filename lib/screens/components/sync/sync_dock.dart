@@ -63,6 +63,7 @@ class _SyncDockState extends State<SyncDock> {
                       trackHeight: 4,
                     ),
                     child: Slider(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
                       value: total.inSeconds > 0
                           ? position.inSeconds
                               .toDouble()
